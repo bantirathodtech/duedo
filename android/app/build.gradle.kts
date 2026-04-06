@@ -5,17 +5,30 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
 android {
     namespace = "com.avishio.duedo"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     signingConfigs {
+        val keystorePropertiesFile = rootProject.file("key.properties")
+        val keystoreProperties = Properties()
+        if (keystorePropertiesFile.exists()) {
+            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+        }
+
         create("release") {
-            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
-            storeFile = file(System.getenv("ANDROID_STORE_FILE") ?: "release-keystore.jks")
-            storePassword = System.getenv("ANDROID_STORE_PASSWORD") ?: ""
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: ""
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: ""
+            storeFile = if (keystoreProperties.containsKey("storeFile")) {
+                file(keystoreProperties.getProperty("storeFile"))
+            } else {
+                null
+            }
+            storePassword = keystoreProperties.getProperty("storePassword") ?: ""
         }
     }
 
@@ -26,7 +39,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {

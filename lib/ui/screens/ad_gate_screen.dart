@@ -59,137 +59,145 @@ class _AdGateScreenState extends State<AdGateScreen> {
           ),
           
           SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    
-                    // Premium Icon / Animation
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primary.withOpacity(0.3), width: 2),
-                      ),
-                      child: const Icon(Icons.shield_rounded, size: 60, color: AppTheme.primary),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    Text(
-                      'Supporting Duedo',
-                      style: GoogleFonts.outfit(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    Text(
-                      'Your financial bodyguard is warming up.\nWatch this short message to support our development.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Countdown Logic
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CircularProgressIndicator(
-                            value: _secondsLeft / 30,
-                            strokeWidth: 8,
-                            backgroundColor: Colors.white.withOpacity(0.1),
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Top section
+                  Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      
+                      // App Logo / Animation
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.primary.withOpacity(0.3), width: 2),
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/app_logo.png',
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        Text(
-                          '$_secondsLeft',
-                          style: GoogleFonts.outfit(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 48),
-                    
-                    // Action Buttons
-                    AnimatedOpacity(
-                      opacity: _secondsLeft == 0 ? 1.0 : 0.5,
-                      duration: const Duration(milliseconds: 500),
-                      child: ElevatedButton(
-                        onPressed: _secondsLeft == 0 ? widget.onComplete : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 56),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          _secondsLeft == 0 ? 'Continue to Dashboard' : 'Wait... $_secondsLeft s',
-                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Text(
+                        'Supporting Duedo',
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    Row(
-                      children: [
-                        Expanded(child: Container(height: 1, color: Colors.white.withOpacity(0.1))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('OR GO PRO', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.3), fontSize: 10, fontWeight: FontWeight.bold)),
+                      
+                      const SizedBox(height: 8),
+                      
+                      Text(
+                        'Your financial freedom engine is warming up.\nSupport development by watching this short message.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.7),
                         ),
-                        Expanded(child: Container(height: 1, color: Colors.white.withOpacity(0.1))),
-                      ],
-                    ),
-  
-                    const SizedBox(height: 24),
-  
-                    _buildSubscriptionOption(
-                      context,
-                      title: 'Monthly Pro',
-                      price: '₹50',
-                      onTap: () => _handleSubscription(context),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSubscriptionOption(
-                      context,
-                      title: 'Annual Pro',
-                      price: '₹500',
-                      isBestValue: true,
-                      onTap: () => _handleSubscription(context),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSubscriptionOption(
-                      context,
-                      title: 'Lifetime Pro',
-                      price: '₹5000',
-                      onTap: () => _handleSubscription(context),
-                    ),
-                    
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Center section (Countdown)
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 70,
+                        height: 70,
+                        child: CircularProgressIndicator(
+                          value: _secondsLeft / 30,
+                          strokeWidth: 6,
+                          backgroundColor: Colors.white.withOpacity(0.1),
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                        ),
+                      ),
+                      Text(
+                        '$_secondsLeft',
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Bottom section (Buttons)
+                  Column(
+                    children: [
+                      AnimatedOpacity(
+                        opacity: _secondsLeft == 0 ? 1.0 : 0.5,
+                        duration: const Duration(milliseconds: 500),
+                        child: ElevatedButton(
+                          onPressed: _secondsLeft == 0 ? widget.onComplete : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            _secondsLeft == 0 ? 'Continue to Dashboard' : 'Wait... $_secondsLeft s',
+                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Row(
+                        children: [
+                          Expanded(child: Container(height: 1, color: Colors.white.withOpacity(0.1))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text('OR GO PRO', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.3), fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                          Expanded(child: Container(height: 1, color: Colors.white.withOpacity(0.1))),
+                        ],
+                      ),
+    
+                      const SizedBox(height: 16),
+    
+                      _buildSubscriptionOption(
+                        context,
+                        title: 'Monthly Pro',
+                        price: '₹50',
+                        onTap: () => _handleSubscription(context),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildSubscriptionOption(
+                        context,
+                        title: 'Annual Pro',
+                        price: '₹500',
+                        isBestValue: true,
+                        onTap: () => _handleSubscription(context),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildSubscriptionOption(
+                        context,
+                        title: 'Lifetime Pro',
+                        price: '₹5000',
+                        onTap: () => _handleSubscription(context),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

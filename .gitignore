@@ -1,5 +1,6 @@
-# Miscellaneous
-*.class
+# Android signing
+android/key.properties
+*.jks
 *.log
 *.pyc
 *.swp

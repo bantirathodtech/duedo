@@ -140,19 +140,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildTextField({required TextEditingController controller, required String label, String? prefixText, IconData? icon}) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-        prefixText: prefixText,
-        prefixIcon: icon != null ? Icon(icon, color: AppTheme.primary, size: 20) : null,
-        filled: true,
-        fillColor: Theme.of(context).cardColor.withOpacity(0.3),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primary, width: 1)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w500),
+          prefixText: prefixText,
+          prefixStyle: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+          prefixIcon: icon != null ? Icon(icon, color: AppTheme.primary, size: 22) : null,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          border: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+          ),
+        ),
       ),
     );
   }

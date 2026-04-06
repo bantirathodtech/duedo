@@ -10,6 +10,7 @@ import '../../services/financial_logic_service.dart';
 import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import 'add_obligation_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -122,38 +123,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TOTAL INCOME', 
-                    style: GoogleFonts.inter(
-                      color: Colors.grey.shade500, 
-                      fontSize: 10, 
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2.0,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        currencyFormat.format(state.settings?.monthlyIncome ?? 0), 
-                        style: GoogleFonts.outfit(
-                          fontSize: 34, 
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.5,
+              child: GestureDetector(
+                onTap: () {
+                  HapticService.selection();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'TOTAL INCOME', 
+                          style: GoogleFonts.inter(
+                            color: Colors.grey.shade500, 
+                            fontSize: 10, 
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2.0,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStreakBadge(state.settings?.paymentStreak ?? 0),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 4),
+                        Icon(Icons.edit_note_rounded, size: 14, color: Colors.grey.shade500),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          currencyFormat.format(state.settings?.monthlyIncome ?? 0), 
+                          style: GoogleFonts.outfit(
+                            fontSize: 34, 
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildStreakBadge(state.settings?.paymentStreak ?? 0),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            _FreedomCountdownRing(data: viewModel.freedomData),
+            Row(
+              children: [
+                _FreedomCountdownRing(data: viewModel.freedomData),
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () {
+                    HapticService.selection();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.settings_outlined, color: AppTheme.primary),
+                ),
+              ],
+            ),
           ],
         ),
       ],

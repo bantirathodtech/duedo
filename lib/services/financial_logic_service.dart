@@ -104,8 +104,19 @@ class FinancialLogicService {
     for (final ob in obligations) {
       if (!ob.isActive) continue;
       totalBalance += ob.totalBalance;
-      final end = ob.endDate ?? ob.nextDueDate?.add(const Duration(days: 30)) ?? DateTime.now().add(const Duration(days: 30));
-      if (end.isAfter(latestDate)) latestDate = end;
+      
+      DateTime projectedEnd;
+      if (ob.endDate != null && ob.endDate!.isAfter(DateTime.now())) {
+        projectedEnd = ob.endDate!;
+      } else if (ob.type == ObligationType.emi && ob.totalBalance > 0 && ob.amount > 0) {
+        int monthsLeft = (ob.totalBalance / ob.amount).ceil();
+        DateTime startFrom = ob.nextDueDate ?? DateTime.now();
+        projectedEnd = DateTime(startFrom.year, startFrom.month + monthsLeft, startFrom.day);
+      } else {
+        projectedEnd = ob.nextDueDate?.add(const Duration(days: 30)) ?? DateTime.now().add(const Duration(days: 30));
+      }
+      
+      if (projectedEnd.isAfter(latestDate)) latestDate = projectedEnd;
     }
     final daysLeft = latestDate.difference(DateTime.now()).inDays;
     return FreedomData(
@@ -143,7 +154,81 @@ class FinancialLogicService {
     }
     return alerts;
   }
+
+  // --- Phase 5: Gamification Engine ---
+
+  /// Calculates a 0-1000 score based on active DTI (Base 800) and Streak (Bonus 200).
+  int calculateHealthScore(double dti, int monthlyStreak) {
+    // 1. DTI Score Component (0 to 800)
+    // DTI of 0.0 -> 800 points
+    // DTI > 0.5 (50%) -> 200 points
+    // Linear scale clamped
+    double dtiScore = 800.0;
+    if (dti > 0) {
+      if (dti >= 0.5) {
+        dtiScore = 200.0;
+      } else {
+        // Map DTI 0.0 -> 0.5 to Score 800 -> 200
+        dtiScore = 800.0 - (dti * 1200.0); // 0.5 * 1200 = 600. 800 - 600 = 200.
+      }
+    }
+
+    // 2. Streak Bonus Component (0 to 200)
+    // Each consecutive month adds 20 points, capping at 10 months (200 points)
+    int streakBonus = (monthlyStreak * 20).clamp(0, 200);
+
+    int finalScore = (dtiScore + streakBonus).round();
+    return finalScore.clamp(0, 1000);
+  }
+
+  /// Calculates which badges the user has unlocked based on their obligations.
+  List<GamificationBadge> calculateBadges(List<Obligation> debts) {
+    final badges = [
+      GamificationBadge(id: 'first_blood', title: 'First Blood', description: 'Pay off 25% of any loan', requiredPercentage: 0.25),
+      GamificationBadge(id: 'halfway_there', title: 'Halfway There', description: 'Pay off 50% of any loan', requiredPercentage: 0.50),
+      GamificationBadge(id: 'finishing_strike', title: 'Finishing Strike', description: 'Pay off 75% of any loan', requiredPercentage: 0.75),
+      GamificationBadge(id: 'debt_destroyer', title: 'Debt Destroyer', description: 'Completely destroy a debt', requiredPercentage: 1.0),
+    ];
+
+    for (var debt in debts) {
+      // Calculate max payoff percentage any debt has achieved
+      // Calculate max payoff percentage any debt has achieved
+      // Let's rely on standard logic: if amount < totalBalance? No, amount is EMI or One-Time original amount.
+      // Database has `amount` which is the original principal, and `totalBalance` which is remaining.
+      // Let's recalculate accurately just using this assumption:
+      double originalPrincipal = debt.amount; 
+      double paidAmount = originalPrincipal - debt.totalBalance;
+      if (paidAmount < 0) paidAmount = 0; // Prevent weird interest capitalization bounds 
+
+      double percentagePaid = originalPrincipal > 0 ? (paidAmount / originalPrincipal) : 0;
+
+      for (var badge in badges) {
+        if (!badge.isUnlocked && percentagePaid >= badge.requiredPercentage) {
+          badge.isUnlocked = true;
+        }
+      }
+    }
+
+    return badges;
+  }
 }
+
+class GamificationBadge {
+  final String id;
+  final String title;
+  final String description;
+  final double requiredPercentage;
+  bool isUnlocked;
+
+  GamificationBadge({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.requiredPercentage,
+    this.isUnlocked = false,
+  });
+}
+
 
 class FreedomData {
   final int daysLeft;
@@ -160,4 +245,16 @@ class IntelligenceAlert {
   final String message;
   final AlertType type;
   IntelligenceAlert({required this.title, required this.message, required this.type});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is IntelligenceAlert &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          message == other.message &&
+          type == other.type;
+
+  @override
+  int get hashCode => title.hashCode ^ message.hashCode ^ type.hashCode;
 }

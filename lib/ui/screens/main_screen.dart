@@ -91,7 +91,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         }
 
         return Scaffold(
-          extendBody: true, // Crucial for floating nav
+          extendBody: false, // Anchored to bottom, no content overlap
           body: PageView(
             controller: _pageController,
             onPageChanged: _onPageChanged,
@@ -133,47 +133,61 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding > 0 ? bottomPadding : 20),
-      height: 70,
-      decoration: AppTheme.glassDecoration(context, blur: 20, opacity: 0.15).copyWith(
-        borderRadius: BorderRadius.circular(35),
+      height: 70 + bottomPadding,
+      padding: EdgeInsets.only(bottom: bottomPadding),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor.withValues(alpha: 0.95),
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.4 : 0.1),
-            blurRadius: 30,
-            spreadRadius: -5,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(35),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _DockItem(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: _DockItem(
               icon: Icons.dashboard_rounded,
               label: 'Overview',
               isSelected: _currentIndex == 0,
               onTap: () => _onItemTapped(0),
               isDark: isDark,
             ),
-            _DockItem(
+          ),
+          Expanded(
+            child: _DockItem(
               icon: Icons.insights_rounded,
               label: 'Intelligence',
               isSelected: _currentIndex == 1,
               onTap: () => _onItemTapped(1),
               isDark: isDark,
             ),
-            _DockItem(
+          ),
+          Expanded(
+            child: _DockItem(
               icon: Icons.calendar_month_rounded,
               label: 'Schedule',
               isSelected: _currentIndex == 2,
               onTap: () => _onItemTapped(2),
               isDark: isDark,
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: _DockItem(
+              icon: Icons.person_rounded,
+              label: 'Profile',
+              isSelected: _currentIndex == 3,
+              onTap: () => _onItemTapped(3),
+              isDark: isDark,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -196,8 +210,8 @@ class _DockItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppTheme.primary;
-    final inactiveColor = isDark ? Colors.white.withOpacity(0.4) : Colors.grey.shade500;
+    const activeColor = AppTheme.primary;
+    final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.4) : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: onTap,
@@ -205,7 +219,7 @@ class _DockItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutBack,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

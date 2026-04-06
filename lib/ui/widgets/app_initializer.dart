@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/notification_service.dart';
 import '../../repositories/obligation_repository.dart';
 import '../theme/app_theme.dart';
+import '../../services/sms_sync_service.dart';
 
 class AppInitializer extends ConsumerStatefulWidget {
   final Widget child;
@@ -26,14 +27,18 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     try {
       // 1. Initialize Notifications
       setState(() => _loadingMessage = 'Setting up alerts...');
-      final notificationService = NotificationService();
+      final notificationService = ref.read(notificationServiceProvider);
       await notificationService.init();
       
       // 2. Initialize Repository (Cloud Sync)
       setState(() => _loadingMessage = 'Syncing with cloud...');
       await ref.read(obligationRepositoryProvider).init();
 
-      // 3. Request permissions (non-blocking in UI thread)
+      // 3. Initialize SMS Sync (Automator)
+      setState(() => _loadingMessage = 'Activating Automator...');
+      await ref.read(smsSyncServiceProvider).init();
+
+      // 4. Request permissions (non-blocking in UI thread)
       setState(() => _loadingMessage = 'Ready to launch...');
       await notificationService.requestPermissions();
 

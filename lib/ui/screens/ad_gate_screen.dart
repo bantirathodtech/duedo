@@ -54,7 +54,7 @@ class _AdGateScreenState extends State<AdGateScreen> {
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
-              color: Colors.black.withOpacity(0.8),
+              color: Colors.black.withValues(alpha: 0.8),
             ),
           ),
           
@@ -74,9 +74,9 @@ class _AdGateScreenState extends State<AdGateScreen> {
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
+                          color: AppTheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.primary.withOpacity(0.3), width: 2),
+                          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 2),
                         ),
                         child: ClipOval(
                           child: Image.asset(
@@ -104,7 +104,7 @@ class _AdGateScreenState extends State<AdGateScreen> {
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -120,7 +120,7 @@ class _AdGateScreenState extends State<AdGateScreen> {
                         child: CircularProgressIndicator(
                           value: _secondsLeft / 30,
                           strokeWidth: 6,
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
                           valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
                         ),
                       ),
@@ -161,12 +161,12 @@ class _AdGateScreenState extends State<AdGateScreen> {
                       
                       Row(
                         children: [
-                          Expanded(child: Container(height: 1, color: Colors.white.withOpacity(0.1))),
+                          Expanded(child: Container(height: 1, color: Colors.white.withValues(alpha: 0.1))),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR GO PRO', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.3), fontSize: 10, fontWeight: FontWeight.bold)),
+                            child: Text('OR GO PRO', style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.3), fontSize: 10, fontWeight: FontWeight.bold)),
                           ),
-                          Expanded(child: Container(height: 1, color: Colors.white.withOpacity(0.1))),
+                          Expanded(child: Container(height: 1, color: Colors.white.withValues(alpha: 0.1))),
                         ],
                       ),
     
@@ -212,9 +212,9 @@ class _AdGateScreenState extends State<AdGateScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isBestValue ? AppTheme.primary.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+          color: isBestValue ? AppTheme.primary.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isBestValue ? AppTheme.primary : Colors.white.withOpacity(0.1), width: 1.5),
+          border: Border.all(color: isBestValue ? AppTheme.primary : Colors.white.withValues(alpha: 0.1), width: 1.5),
         ),
         child: Row(
           children: [

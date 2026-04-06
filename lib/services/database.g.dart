@@ -235,6 +235,17 @@ class $ObligationsTable extends Obligations
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _taxCategoryMeta = const VerificationMeta(
+    'taxCategory',
+  );
+  @override
+  late final GeneratedColumn<String> taxCategory = GeneratedColumn<String>(
+    'tax_category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -257,6 +268,7 @@ class $ObligationsTable extends Obligations
     createdAt,
     updatedAt,
     displayOrder,
+    taxCategory,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -398,6 +410,15 @@ class $ObligationsTable extends Obligations
         ),
       );
     }
+    if (data.containsKey('tax_category')) {
+      context.handle(
+        _taxCategoryMeta,
+        taxCategory.isAcceptableOrUnknown(
+          data['tax_category']!,
+          _taxCategoryMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -493,6 +514,10 @@ class $ObligationsTable extends Obligations
         DriftSqlType.int,
         data['${effectivePrefix}display_order'],
       )!,
+      taxCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_category'],
+      ),
     );
   }
 
@@ -530,6 +555,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final int displayOrder;
+  final String? taxCategory;
   const Obligation({
     required this.id,
     required this.title,
@@ -551,6 +577,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     required this.createdAt,
     required this.updatedAt,
     required this.displayOrder,
+    this.taxCategory,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -593,6 +620,9 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['display_order'] = Variable<int>(displayOrder);
+    if (!nullToAbsent || taxCategory != null) {
+      map['tax_category'] = Variable<String>(taxCategory);
+    }
     return map;
   }
 
@@ -626,6 +656,9 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       displayOrder: Value(displayOrder),
+      taxCategory: taxCategory == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taxCategory),
     );
   }
 
@@ -661,6 +694,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       displayOrder: serializer.fromJson<int>(json['displayOrder']),
+      taxCategory: serializer.fromJson<String?>(json['taxCategory']),
     );
   }
   @override
@@ -693,6 +727,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'displayOrder': serializer.toJson<int>(displayOrder),
+      'taxCategory': serializer.toJson<String?>(taxCategory),
     };
   }
 
@@ -717,6 +752,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     DateTime? createdAt,
     DateTime? updatedAt,
     int? displayOrder,
+    Value<String?> taxCategory = const Value.absent(),
   }) => Obligation(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -740,6 +776,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     displayOrder: displayOrder ?? this.displayOrder,
+    taxCategory: taxCategory.present ? taxCategory.value : this.taxCategory,
   );
   Obligation copyWithCompanion(ObligationsCompanion data) {
     return Obligation(
@@ -777,6 +814,9 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       displayOrder: data.displayOrder.present
           ? data.displayOrder.value
           : this.displayOrder,
+      taxCategory: data.taxCategory.present
+          ? data.taxCategory.value
+          : this.taxCategory,
     );
   }
 
@@ -802,13 +842,14 @@ class Obligation extends DataClass implements Insertable<Obligation> {
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('displayOrder: $displayOrder')
+          ..write('displayOrder: $displayOrder, ')
+          ..write('taxCategory: $taxCategory')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     title,
     type,
@@ -829,7 +870,8 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     createdAt,
     updatedAt,
     displayOrder,
-  );
+    taxCategory,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -853,7 +895,8 @@ class Obligation extends DataClass implements Insertable<Obligation> {
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.displayOrder == this.displayOrder);
+          other.displayOrder == this.displayOrder &&
+          other.taxCategory == this.taxCategory);
 }
 
 class ObligationsCompanion extends UpdateCompanion<Obligation> {
@@ -877,6 +920,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> displayOrder;
+  final Value<String?> taxCategory;
   const ObligationsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -898,6 +942,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.displayOrder = const Value.absent(),
+    this.taxCategory = const Value.absent(),
   });
   ObligationsCompanion.insert({
     this.id = const Value.absent(),
@@ -920,6 +965,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.displayOrder = const Value.absent(),
+    this.taxCategory = const Value.absent(),
   }) : title = Value(title),
        type = Value(type),
        amount = Value(amount),
@@ -947,6 +993,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? displayOrder,
+    Expression<String>? taxCategory,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -969,6 +1016,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (displayOrder != null) 'display_order': displayOrder,
+      if (taxCategory != null) 'tax_category': taxCategory,
     });
   }
 
@@ -993,6 +1041,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? displayOrder,
+    Value<String?>? taxCategory,
   }) {
     return ObligationsCompanion(
       id: id ?? this.id,
@@ -1015,6 +1064,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       displayOrder: displayOrder ?? this.displayOrder,
+      taxCategory: taxCategory ?? this.taxCategory,
     );
   }
 
@@ -1087,6 +1137,9 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     if (displayOrder.present) {
       map['display_order'] = Variable<int>(displayOrder.value);
     }
+    if (taxCategory.present) {
+      map['tax_category'] = Variable<String>(taxCategory.value);
+    }
     return map;
   }
 
@@ -1112,7 +1165,8 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('displayOrder: $displayOrder')
+          ..write('displayOrder: $displayOrder, ')
+          ..write('taxCategory: $taxCategory')
           ..write(')'))
         .toString();
   }
@@ -1667,6 +1721,21 @@ class $UserSettingsTable extends UserSettings
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _smsSyncEnabledMeta = const VerificationMeta(
+    'smsSyncEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> smsSyncEnabled = GeneratedColumn<bool>(
+    'sms_sync_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sms_sync_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1680,6 +1749,7 @@ class $UserSettingsTable extends UserSettings
     isPremium,
     paymentStreak,
     lastPaymentDate,
+    smsSyncEnabled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1777,6 +1847,15 @@ class $UserSettingsTable extends UserSettings
         ),
       );
     }
+    if (data.containsKey('sms_sync_enabled')) {
+      context.handle(
+        _smsSyncEnabledMeta,
+        smsSyncEnabled.isAcceptableOrUnknown(
+          data['sms_sync_enabled']!,
+          _smsSyncEnabledMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1830,6 +1909,10 @@ class $UserSettingsTable extends UserSettings
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_payment_date'],
       ),
+      smsSyncEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sms_sync_enabled'],
+      )!,
     );
   }
 
@@ -1851,6 +1934,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
   final bool isPremium;
   final int paymentStreak;
   final DateTime? lastPaymentDate;
+  final bool smsSyncEnabled;
   const UserSetting({
     required this.id,
     required this.monthlyIncome,
@@ -1863,6 +1947,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     required this.isPremium,
     required this.paymentStreak,
     this.lastPaymentDate,
+    required this.smsSyncEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1880,6 +1965,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     if (!nullToAbsent || lastPaymentDate != null) {
       map['last_payment_date'] = Variable<DateTime>(lastPaymentDate);
     }
+    map['sms_sync_enabled'] = Variable<bool>(smsSyncEnabled);
     return map;
   }
 
@@ -1898,6 +1984,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       lastPaymentDate: lastPaymentDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastPaymentDate),
+      smsSyncEnabled: Value(smsSyncEnabled),
     );
   }
 
@@ -1920,6 +2007,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       isPremium: serializer.fromJson<bool>(json['isPremium']),
       paymentStreak: serializer.fromJson<int>(json['paymentStreak']),
       lastPaymentDate: serializer.fromJson<DateTime?>(json['lastPaymentDate']),
+      smsSyncEnabled: serializer.fromJson<bool>(json['smsSyncEnabled']),
     );
   }
   @override
@@ -1937,6 +2025,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       'isPremium': serializer.toJson<bool>(isPremium),
       'paymentStreak': serializer.toJson<int>(paymentStreak),
       'lastPaymentDate': serializer.toJson<DateTime?>(lastPaymentDate),
+      'smsSyncEnabled': serializer.toJson<bool>(smsSyncEnabled),
     };
   }
 
@@ -1952,6 +2041,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     bool? isPremium,
     int? paymentStreak,
     Value<DateTime?> lastPaymentDate = const Value.absent(),
+    bool? smsSyncEnabled,
   }) => UserSetting(
     id: id ?? this.id,
     monthlyIncome: monthlyIncome ?? this.monthlyIncome,
@@ -1966,6 +2056,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     lastPaymentDate: lastPaymentDate.present
         ? lastPaymentDate.value
         : this.lastPaymentDate,
+    smsSyncEnabled: smsSyncEnabled ?? this.smsSyncEnabled,
   );
   UserSetting copyWithCompanion(UserSettingsCompanion data) {
     return UserSetting(
@@ -1994,6 +2085,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       lastPaymentDate: data.lastPaymentDate.present
           ? data.lastPaymentDate.value
           : this.lastPaymentDate,
+      smsSyncEnabled: data.smsSyncEnabled.present
+          ? data.smsSyncEnabled.value
+          : this.smsSyncEnabled,
     );
   }
 
@@ -2010,7 +2104,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           ..write('themeMode: $themeMode, ')
           ..write('isPremium: $isPremium, ')
           ..write('paymentStreak: $paymentStreak, ')
-          ..write('lastPaymentDate: $lastPaymentDate')
+          ..write('lastPaymentDate: $lastPaymentDate, ')
+          ..write('smsSyncEnabled: $smsSyncEnabled')
           ..write(')'))
         .toString();
   }
@@ -2028,6 +2123,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     isPremium,
     paymentStreak,
     lastPaymentDate,
+    smsSyncEnabled,
   );
   @override
   bool operator ==(Object other) =>
@@ -2043,7 +2139,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           other.themeMode == this.themeMode &&
           other.isPremium == this.isPremium &&
           other.paymentStreak == this.paymentStreak &&
-          other.lastPaymentDate == this.lastPaymentDate);
+          other.lastPaymentDate == this.lastPaymentDate &&
+          other.smsSyncEnabled == this.smsSyncEnabled);
 }
 
 class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
@@ -2058,6 +2155,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   final Value<bool> isPremium;
   final Value<int> paymentStreak;
   final Value<DateTime?> lastPaymentDate;
+  final Value<bool> smsSyncEnabled;
   const UserSettingsCompanion({
     this.id = const Value.absent(),
     this.monthlyIncome = const Value.absent(),
@@ -2070,6 +2168,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.isPremium = const Value.absent(),
     this.paymentStreak = const Value.absent(),
     this.lastPaymentDate = const Value.absent(),
+    this.smsSyncEnabled = const Value.absent(),
   });
   UserSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -2083,6 +2182,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.isPremium = const Value.absent(),
     this.paymentStreak = const Value.absent(),
     this.lastPaymentDate = const Value.absent(),
+    this.smsSyncEnabled = const Value.absent(),
   });
   static Insertable<UserSetting> custom({
     Expression<int>? id,
@@ -2096,6 +2196,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Expression<bool>? isPremium,
     Expression<int>? paymentStreak,
     Expression<DateTime>? lastPaymentDate,
+    Expression<bool>? smsSyncEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2111,6 +2212,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       if (isPremium != null) 'is_premium': isPremium,
       if (paymentStreak != null) 'payment_streak': paymentStreak,
       if (lastPaymentDate != null) 'last_payment_date': lastPaymentDate,
+      if (smsSyncEnabled != null) 'sms_sync_enabled': smsSyncEnabled,
     });
   }
 
@@ -2126,6 +2228,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Value<bool>? isPremium,
     Value<int>? paymentStreak,
     Value<DateTime?>? lastPaymentDate,
+    Value<bool>? smsSyncEnabled,
   }) {
     return UserSettingsCompanion(
       id: id ?? this.id,
@@ -2139,6 +2242,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       isPremium: isPremium ?? this.isPremium,
       paymentStreak: paymentStreak ?? this.paymentStreak,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
+      smsSyncEnabled: smsSyncEnabled ?? this.smsSyncEnabled,
     );
   }
 
@@ -2178,6 +2282,9 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     if (lastPaymentDate.present) {
       map['last_payment_date'] = Variable<DateTime>(lastPaymentDate.value);
     }
+    if (smsSyncEnabled.present) {
+      map['sms_sync_enabled'] = Variable<bool>(smsSyncEnabled.value);
+    }
     return map;
   }
 
@@ -2194,7 +2301,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
           ..write('themeMode: $themeMode, ')
           ..write('isPremium: $isPremium, ')
           ..write('paymentStreak: $paymentStreak, ')
-          ..write('lastPaymentDate: $lastPaymentDate')
+          ..write('lastPaymentDate: $lastPaymentDate, ')
+          ..write('smsSyncEnabled: $smsSyncEnabled')
           ..write(')'))
         .toString();
   }
@@ -2239,6 +2347,7 @@ typedef $$ObligationsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> displayOrder,
+      Value<String?> taxCategory,
     });
 typedef $$ObligationsTableUpdateCompanionBuilder =
     ObligationsCompanion Function({
@@ -2262,6 +2371,7 @@ typedef $$ObligationsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> displayOrder,
+      Value<String?> taxCategory,
     });
 
 final class $$ObligationsTableReferences
@@ -2403,6 +2513,11 @@ class $$ObligationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get taxCategory => $composableBuilder(
+    column: $table.taxCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> paymentsRefs(
     Expression<bool> Function($$PaymentsTableFilterComposer f) f,
   ) {
@@ -2537,6 +2652,11 @@ class $$ObligationsTableOrderingComposer
     column: $table.displayOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get taxCategory => $composableBuilder(
+    column: $table.taxCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ObligationsTableAnnotationComposer
@@ -2622,6 +2742,11 @@ class $$ObligationsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get taxCategory => $composableBuilder(
+    column: $table.taxCategory,
+    builder: (column) => column,
+  );
+
   Expression<T> paymentsRefs<T extends Object>(
     Expression<T> Function($$PaymentsTableAnnotationComposer a) f,
   ) {
@@ -2696,6 +2821,7 @@ class $$ObligationsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> displayOrder = const Value.absent(),
+                Value<String?> taxCategory = const Value.absent(),
               }) => ObligationsCompanion(
                 id: id,
                 title: title,
@@ -2717,6 +2843,7 @@ class $$ObligationsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 displayOrder: displayOrder,
+                taxCategory: taxCategory,
               ),
           createCompanionCallback:
               ({
@@ -2740,6 +2867,7 @@ class $$ObligationsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> displayOrder = const Value.absent(),
+                Value<String?> taxCategory = const Value.absent(),
               }) => ObligationsCompanion.insert(
                 id: id,
                 title: title,
@@ -2761,6 +2889,7 @@ class $$ObligationsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 displayOrder: displayOrder,
+                taxCategory: taxCategory,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3169,6 +3298,7 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
       Value<bool> isPremium,
       Value<int> paymentStreak,
       Value<DateTime?> lastPaymentDate,
+      Value<bool> smsSyncEnabled,
     });
 typedef $$UserSettingsTableUpdateCompanionBuilder =
     UserSettingsCompanion Function({
@@ -3183,6 +3313,7 @@ typedef $$UserSettingsTableUpdateCompanionBuilder =
       Value<bool> isPremium,
       Value<int> paymentStreak,
       Value<DateTime?> lastPaymentDate,
+      Value<bool> smsSyncEnabled,
     });
 
 class $$UserSettingsTableFilterComposer
@@ -3246,6 +3377,11 @@ class $$UserSettingsTableFilterComposer
 
   ColumnFilters<DateTime> get lastPaymentDate => $composableBuilder(
     column: $table.lastPaymentDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get smsSyncEnabled => $composableBuilder(
+    column: $table.smsSyncEnabled,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3313,6 +3449,11 @@ class $$UserSettingsTableOrderingComposer
     column: $table.lastPaymentDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get smsSyncEnabled => $composableBuilder(
+    column: $table.smsSyncEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserSettingsTableAnnotationComposer
@@ -3370,6 +3511,11 @@ class $$UserSettingsTableAnnotationComposer
     column: $table.lastPaymentDate,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get smsSyncEnabled => $composableBuilder(
+    column: $table.smsSyncEnabled,
+    builder: (column) => column,
+  );
 }
 
 class $$UserSettingsTableTableManager
@@ -3414,6 +3560,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> isPremium = const Value.absent(),
                 Value<int> paymentStreak = const Value.absent(),
                 Value<DateTime?> lastPaymentDate = const Value.absent(),
+                Value<bool> smsSyncEnabled = const Value.absent(),
               }) => UserSettingsCompanion(
                 id: id,
                 monthlyIncome: monthlyIncome,
@@ -3426,6 +3573,7 @@ class $$UserSettingsTableTableManager
                 isPremium: isPremium,
                 paymentStreak: paymentStreak,
                 lastPaymentDate: lastPaymentDate,
+                smsSyncEnabled: smsSyncEnabled,
               ),
           createCompanionCallback:
               ({
@@ -3440,6 +3588,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> isPremium = const Value.absent(),
                 Value<int> paymentStreak = const Value.absent(),
                 Value<DateTime?> lastPaymentDate = const Value.absent(),
+                Value<bool> smsSyncEnabled = const Value.absent(),
               }) => UserSettingsCompanion.insert(
                 id: id,
                 monthlyIncome: monthlyIncome,
@@ -3452,6 +3601,7 @@ class $$UserSettingsTableTableManager
                 isPremium: isPremium,
                 paymentStreak: paymentStreak,
                 lastPaymentDate: lastPaymentDate,
+                smsSyncEnabled: smsSyncEnabled,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

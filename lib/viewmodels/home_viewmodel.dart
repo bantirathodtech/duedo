@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import '../../services/financial_logic_service.dart';
 import '../../services/notification_service.dart';
 import '../../repositories/obligation_repository.dart';
 import '../models/app_enums.dart';
+import '../../services/milestone_service.dart';
 
 class HomeState {
   final List<Obligation> obligations;
@@ -13,6 +15,9 @@ class HomeState {
   final UserSetting? settings;
   final bool isLoading;
   final int projectionMonths;
+  final double totalMonthlyRecurring;
+  final List<Milestone> milestones;
+  final bool hasNewlyUnlockedMilestone;
 
   HomeState({
     this.obligations = const [],
@@ -20,6 +25,9 @@ class HomeState {
     this.settings,
     this.isLoading = true,
     this.projectionMonths = 1,
+    this.totalMonthlyRecurring = 0,
+    this.milestones = const [],
+    this.hasNewlyUnlockedMilestone = false,
   });
 
   HomeState copyWith({
@@ -28,6 +36,9 @@ class HomeState {
     UserSetting? settings,
     bool? isLoading,
     int? projectionMonths,
+    double? totalMonthlyRecurring,
+    List<Milestone>? milestones,
+    bool? hasNewlyUnlockedMilestone,
   }) {
     return HomeState(
       obligations: obligations ?? this.obligations,
@@ -35,45 +46,145 @@ class HomeState {
       settings: settings ?? this.settings,
       isLoading: isLoading ?? this.isLoading,
       projectionMonths: projectionMonths ?? this.projectionMonths,
+      totalMonthlyRecurring: totalMonthlyRecurring ?? this.totalMonthlyRecurring,
+      milestones: milestones ?? this.milestones,
+      hasNewlyUnlockedMilestone: hasNewlyUnlockedMilestone ?? this.hasNewlyUnlockedMilestone,
     );
   }
 }
 
 class HomeViewModel extends StateNotifier<HomeState> {
   final ObligationRepository _repository;
+  final MilestoneService _milestoneService;
+  final NotificationService _notificationService;
   final _financialLogic = FinancialLogicService();
-  final _notificationService = NotificationService();
   List<IntelligenceAlert> _lastAlerts = [];
+  
+  final List<StreamSubscription> _subscriptions = [];
 
-  HomeViewModel(this._repository) : super(HomeState()) {
+  HomeViewModel(this._repository, this._milestoneService, this._notificationService) : super(HomeState()) {
     _init();
+  }
+
+  @override
+  void dispose() {
+    for (final sub in _subscriptions) {
+      sub.cancel();
+    }
+    super.dispose();
   }
 
   void _init() {
     // Listen to obligations
-    _repository.getAllObligations().listen((obs) {
-      state = state.copyWith(obligations: obs, isLoading: false);
-    });
+    _subscriptions.add(_repository.getAllObligations().listen((obs) {
+      final recurring = obs
+          .where((o) => o.type == ObligationType.recurring && o.isActive)
+          .fold(0.0, (sum, o) => sum + o.amount);
+          
+      state = state.copyWith(
+        obligations: obs, 
+        totalMonthlyRecurring: recurring,
+        isLoading: false
+      );
+      _checkMilestones();
+    }));
 
     // Listen to payments
-    _repository.getAllPaymentsStream().listen((payments) {
+    _subscriptions.add(_repository.getAllPaymentsStream().listen((payments) {
       state = state.copyWith(payments: payments);
-    });
+      _checkMilestones();
+    }));
 
     // Listen to settings
-    _repository.getSettings().listen((settings) {
+    _subscriptions.add(_repository.getSettings().listen((settings) {
       if (settings != null) {
         state = state.copyWith(
           settings: settings,
           projectionMonths: settings.projectionMonths,
         );
+        _checkMilestones();
       }
-    });
+    }));
+
+    _loadMilestones();
+    _updateAlerts();
+  }
+
+  void _updateAlerts() {
+    final income = state.settings?.monthlyIncome ?? 0;
+    final alerts = _financialLogic.generateAIIntelligence(state.obligations, income);
+    
+    // Trigger notifications for new critical alerts
+    for (final alert in alerts) {
+      final isNew = !_lastAlerts.any((a) => a.title == alert.title && a.message == alert.message);
+      if (isNew && alert.type == AlertType.warning) {
+        _notificationService.showInstantAlert(
+          id: alert.hashCode,
+          title: 'Duedo AI: ${alert.title}',
+          body: alert.message,
+        );
+      }
+    }
+    _lastAlerts = alerts;
+  }
+
+  Future<void> _loadMilestones() async {
+    final ms = await _milestoneService.getMilestones();
+    state = state.copyWith(milestones: ms);
+  }
+
+  Future<void> _checkMilestones() async {
+    bool newlyUnlocked = false;
+
+    // 1. Debt Destroyer (At least one paid obligation)
+    if (state.obligations.any((o) => o.status == ObligationStatus.paid)) {
+      if (await _milestoneService.unlockMilestone(MilestoneType.debtDestroyer)) newlyUnlocked = true;
+    }
+
+    // 2. Cashflow King (Disposable > 50% of income)
+    final income = state.settings?.monthlyIncome ?? 0;
+    if (income > 0) {
+      final freeCash = income - totalMonthlyRecurring;
+      if (freeCash > (income * 0.5)) {
+        if (await _milestoneService.unlockMilestone(MilestoneType.cashflowKing)) newlyUnlocked = true;
+      }
+    }
+
+    // 3. Freedom Seeker (Date < 365 days)
+    if (freedomData.daysLeft > 0 && freedomData.daysLeft < 365) {
+      if (await _milestoneService.unlockMilestone(MilestoneType.freedomSeeker)) newlyUnlocked = true;
+    }
+
+    // 4. Consistency Master (Streak >= 3) - Lowering for demo/start
+    if ((state.settings?.paymentStreak ?? 0) >= 3) {
+       if (await _milestoneService.unlockMilestone(MilestoneType.consistencyMaster)) newlyUnlocked = true;
+    }
+
+    if (newlyUnlocked) {
+      state = state.copyWith(hasNewlyUnlockedMilestone: true);
+      _loadMilestones();
+      
+      _notificationService.showInstantAlert(
+        id: 999,
+        title: '🏆 Achievement Unlocked!',
+        body: 'You\'ve earned a new financial milestone badge. Check your profile!',
+      );
+    }
+  }
+
+  void clearNewlyUnlockedMilestone() {
+    state = state.copyWith(hasNewlyUnlockedMilestone: false);
   }
 
   double get totalMonthlyEMI {
     return state.obligations
         .where((o) => o.type == ObligationType.emi && o.isActive)
+        .fold(0, (sum, o) => sum + o.amount);
+  }
+
+  double get totalMonthlyRecurring {
+    return state.obligations
+        .where((o) => o.type == ObligationType.recurring && o.isActive)
         .fold(0, (sum, o) => sum + o.amount);
   }
 
@@ -93,10 +204,31 @@ class HomeViewModel extends StateNotifier<HomeState> {
   }
 
   double get pressureScore {
-    final income = (state.settings?.monthlyIncome ?? 0) * state.projectionMonths;
-    if (income == 0) return 0;
-    final totalEmis = totalMonthlyEMI * state.projectionMonths;
-    return (totalEmis + totalOneTimeDue) / income;
+    return _financialLogic.calculatePressureLevel(state.obligations, state.settings?.monthlyIncome ?? 0);
+  }
+
+  int get healthScore {
+    final rawIncome = (state.settings?.monthlyIncome ?? 0);
+    final freeCashFlow = rawIncome - totalMonthlyRecurring;
+    final dti = freeCashFlow > 0 ? (totalMonthlyEMI / freeCashFlow) : (totalMonthlyEMI > 0 ? 1.0 : 0.0);
+    return _financialLogic.calculateHealthScore(dti, state.settings?.paymentStreak ?? 0);
+  }
+
+  List<GamificationBadge> get gamificationBadges {
+    return _financialLogic.calculateBadges(state.obligations);
+  }
+
+  Map<String, double> get taxSavings {
+    return _financialLogic.calculateTaxSavings(state.obligations);
+  }
+
+  String get financialRank {
+    return _financialLogic.calculateFinancialRank(healthScore);
+  }
+
+  String get anonymousUserId {
+    final rawId = state.settings?.id.toString() ?? '1';
+    return 'DUEDO-${rawId.padLeft(6, '0')}';
   }
 
   PressureLevel get pressureLevel {
@@ -123,9 +255,18 @@ class HomeViewModel extends StateNotifier<HomeState> {
       bool isNewMonth = lastDate == null || (now.year > lastDate.year || (now.year == lastDate.year && now.month > lastDate.month));
       
       if (isNewMonth) {
+        // PERFECTION: Check if the streak was broken
+        // If the gap is > 1 month, reset to 1. Else increment.
+        bool isConsecutive = lastDate != null && 
+            ((now.year == lastDate.year && now.month == lastDate.month + 1) || 
+             (now.year == lastDate.year + 1 && now.month == 1 && lastDate.month == 12));
+        
+        int newStreak = isConsecutive ? (settings.paymentStreak + 1) : 1;
+        if (lastDate == null) newStreak = 1;
+
         await updateSettings(UserSettingsCompanion(
           id: const drift.Value(1),
-          paymentStreak: drift.Value(settings.paymentStreak + 1),
+          paymentStreak: drift.Value(newStreak),
           lastPaymentDate: drift.Value(now),
         ));
       }
@@ -150,12 +291,32 @@ class HomeViewModel extends StateNotifier<HomeState> {
     ));
   }
 
-  Future<void> reorderObligations(int oldIndex, int newIndex) async {
-    final list = sortedObligations.where((o) => o.isActive).toList();
+  Future<void> reorderObligations(int oldIndex, int newIndex, {List<Obligation>? filteredList}) async {
+    final masterList = sortedObligations.where((o) => o.isActive).toList();
+    final itemsToReorder = filteredList ?? masterList;
+    
     if (newIndex > oldIndex) newIndex -= 1;
-    final item = list.removeAt(oldIndex);
-    list.insert(newIndex, item);
-    await _repository.reorderObligations(list);
+    final item = itemsToReorder.removeAt(oldIndex);
+    itemsToReorder.insert(newIndex, item);
+
+    // Reconstruct the master list by merging the newly ordered filtered items 
+    // back into the positions occupied by the filtered items in the master list.
+    if (filteredList != null) {
+      final filteredIds = filteredList.map((o) => o.id).toSet();
+      int filteredIdx = 0;
+      final newList = <Obligation>[];
+      
+      for (var original in masterList) {
+        if (filteredIds.contains(original.id)) {
+          newList.add(itemsToReorder[filteredIdx++]);
+        } else {
+          newList.add(original);
+        }
+      }
+      await _repository.reorderObligations(newList);
+    } else {
+      await _repository.reorderObligations(itemsToReorder);
+    }
   }
 
   List<Obligation> getObligationsForDay(DateTime day) {
@@ -170,26 +331,12 @@ class HomeViewModel extends StateNotifier<HomeState> {
   }
 
   FreedomData get freedomData {
-    return _financialLogic.calculateFreedomData(state.obligations);
+    return _financialLogic.calculateFreedomData(state.obligations, state.settings?.monthlyIncome ?? 0);
   }
 
   List<IntelligenceAlert> get intelligenceAlerts {
-    final income = state.settings?.monthlyIncome ?? 0;
-    final alerts = _financialLogic.generateAIIntelligence(state.obligations, income);
-    
-    // Trigger notifications for new critical alerts
-    for (final alert in alerts) {
-      final isNew = !_lastAlerts.any((a) => a.title == alert.title && a.message == alert.message);
-      if (isNew && alert.type == AlertType.warning) {
-        _notificationService.showInstantAlert(
-          id: alert.hashCode,
-          title: 'Duedo AI: ${alert.title}',
-          body: alert.message,
-        );
-      }
-    }
-    _lastAlerts = alerts;
-    return alerts;
+    _updateAlerts();
+    return _lastAlerts;
   }
 
   List<ActionableInsight> get insights {
@@ -236,5 +383,9 @@ class HomeViewModel extends StateNotifier<HomeState> {
 }
 
 final homeViewModelProvider = StateNotifierProvider<HomeViewModel, HomeState>((ref) {
-  return HomeViewModel(ref.watch(obligationRepositoryProvider));
+  return HomeViewModel(
+    ref.watch(obligationRepositoryProvider),
+    ref.watch(milestoneServiceProvider),
+    ref.watch(notificationServiceProvider),
+  );
 });

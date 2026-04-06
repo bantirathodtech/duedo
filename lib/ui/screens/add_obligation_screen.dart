@@ -214,7 +214,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
               fontSize: 10,
               fontWeight: FontWeight.w900,
               letterSpacing: 2.0,
-              color: AppTheme.primary.withOpacity(0.8),
+              color: AppTheme.primary.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 16),
@@ -227,14 +227,14 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
   Widget _buildMustPayToggle() {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.3),
+        color: Theme.of(context).cardColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: SwitchListTile(
         title: const Text('No Specific Due Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         subtitle: const Text('Marks as a high-priority "Must Pay" item', style: TextStyle(fontSize: 11)),
         value: _noDueDate,
-        activeColor: AppTheme.primary,
+        activeThumbColor: AppTheme.primary,
         onChanged: (v) {
           HapticService.selection();
           setState(() {
@@ -264,17 +264,18 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.05),
+            color: AppTheme.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   _buildSummaryItem('Total Paid', '₹${totalPaid.toInt()}', AppTheme.primary),
-                   _buildSummaryItem('Remaining', '₹${remaining.toInt()}', AppTheme.danger),
+                   Expanded(child: _buildSummaryItem('Total Paid', '₹${totalPaid.toInt()}', AppTheme.primary)),
+                   const SizedBox(width: 8),
+                   Expanded(child: _buildSummaryItem('Remaining', '₹${remaining.toInt()}', AppTheme.danger)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -303,7 +304,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Row(
               children: [
-                CircleAvatar(radius: 4, backgroundColor: AppTheme.primary.withOpacity(0.5)),
+                CircleAvatar(radius: 4, backgroundColor: AppTheme.primary.withValues(alpha: 0.5)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -311,10 +312,18 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
-                if (p.note != null) Text(p.note!, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                if (p.note != null) 
+                  Flexible(
+                    child: Text(
+                      p.note!, 
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ],
     );
@@ -348,7 +357,8 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
               final amount = double.tryParse(controller.text) ?? 0;
               if (amount > 0) {
                 await ref.read(homeViewModelProvider.notifier).recordPayment(widget.obligation!, amount);
-                if (mounted) Navigator.pop(context);
+                if (!context.mounted) return;
+                Navigator.pop(context);
                 setState(() {}); // Rebuild to show updated summary
               }
             },
@@ -364,7 +374,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -395,17 +405,21 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
         prefixIcon: icon != null ? Icon(icon) : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         filled: true,
-        fillColor: Theme.of(context).cardColor.withOpacity(0.5),
+        fillColor: Theme.of(context).cardColor.withValues(alpha: 0.5),
       ),
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
-      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+      validator: (v) {
+        if (label.contains('(Optional)')) return null;
+        return v == null || v.isEmpty ? 'Required' : null;
+      },
     );
   }
 
   Widget _buildAmountField() {
     return TextFormField(
+      initialValue: widget.obligation != null ? _amount.toString() : null,
       decoration: InputDecoration(
         labelText: 'Amount',
         prefixIcon: const Icon(Icons.currency_rupee),
@@ -420,13 +434,14 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
 
   Widget _buildCategoryDropdown() {
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       value: _categories.contains(_category) ? _category : 'General',
       decoration: InputDecoration(
         labelText: 'Category',
         prefixIcon: const Icon(Icons.category),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         filled: true,
-        fillColor: Theme.of(context).cardColor.withOpacity(0.5),
+        fillColor: Theme.of(context).cardColor.withValues(alpha: 0.5),
       ),
       items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
       onChanged: (v) => setState(() => _category = v!),
@@ -435,6 +450,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
 
   Widget _buildPriorityDropdown() {
     return DropdownButtonFormField<PriorityLevel>(
+      isExpanded: true,
       value: _priority,
       decoration: InputDecoration(
         labelText: 'Priority',
@@ -495,6 +511,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
           priority: _priority,
           category: _category,
           emiDurationMonths: drift.Value(_emiDuration),
+          gracePeriodDays: drift.Value(_gracePeriodDays),
           totalBalance: drift.Value(_totalBalance),
           interestRate: drift.Value(_interestRate),
           notes: drift.Value(_notes),
@@ -510,6 +527,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
           priority: _priority,
           category: _category,
           emiDurationMonths: drift.Value(_emiDuration),
+          gracePeriodDays: _gracePeriodDays,
           totalBalance: _totalBalance,
           interestRate: _interestRate,
           notes: drift.Value(_notes),
@@ -551,9 +569,18 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Payment Window', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            Text(_gracePeriodDays == 0 ? 'Exact Date' : '+ $_gracePeriodDays Days', 
-                 style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900)),
+            const Flexible(
+              child: Text(
+                'Payment Window', 
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _gracePeriodDays == 0 ? 'Exact Date' : '+ $_gracePeriodDays Days', 
+              style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900),
+            ),
           ],
         ),
         Slider(
@@ -567,7 +594,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
             setState(() => _gracePeriodDays = v.toInt());
           },
         ),
-        Text('Due between the start date and ${_gracePeriodDays} days after.', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+        Text('Due between the start date and $_gracePeriodDays days after.', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
       ],
     );
   }
@@ -592,11 +619,17 @@ class _TypeButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(15),
         ),
         alignment: Alignment.center,
-        child: Text(
-          title, 
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey,
-            fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title, 
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ),

@@ -30,6 +30,7 @@ class Obligations extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get displayOrder => integer().withDefault(const Constant(0))();
+  TextColumn get taxCategory => text().nullable()(); // e.g., '80C', '80D'
 }
 
 class Payments extends Table {
@@ -53,6 +54,7 @@ class UserSettings extends Table {
   BoolColumn get isPremium => boolean().withDefault(const Constant(false))();
   IntColumn get paymentStreak => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastPaymentDate => dateTime().nullable()();
+  BoolColumn get smsSyncEnabled => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -63,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -101,6 +103,12 @@ class AppDatabase extends _$AppDatabase {
         if (from < 7) {
           await m.addColumn(obligations, obligations.totalBalance);
           await m.addColumn(obligations, obligations.interestRate);
+        }
+        if (from < 8) {
+          await m.addColumn(userSettings, userSettings.smsSyncEnabled);
+        }
+        if (from < 9) {
+          await m.addColumn(obligations, obligations.taxCategory);
         }
       },
     );

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/insights_viewmodel.dart';
+import '../../services/optimization_engine.dart';
 import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/financial_logic_service.dart';
+import '../../services/haptic_service.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -13,7 +16,9 @@ class InsightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeViewModelProvider);
+    final insightsState = ref.watch(insightsViewModelProvider);
     final viewModel = ref.read(homeViewModelProvider.notifier);
+    final insightsViewModel = ref.read(insightsViewModelProvider.notifier);
     final currencyFormat = NumberFormat.simpleCurrency(
       name: state.settings?.currency ?? '₹',
       decimalDigits: 0,
@@ -38,6 +43,21 @@ class InsightsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildSectionHeader('Automator Strategy'),
+                  const SizedBox(height: 16),
+                  _buildStrategyPanel(insightsState, insightsViewModel, currencyFormat, context),
+                  const SizedBox(height: 32),
+                  
+                  _buildSectionHeader('Simulation Sandbox'),
+                  const SizedBox(height: 16),
+                  _buildSandboxPanel(insightsState, insightsViewModel, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('Milestone Achievements'),
+                  const SizedBox(height: 16),
+                  _buildMilestonesLocker(viewModel, context),
+                  const SizedBox(height: 32),
+
                   _buildSectionHeader('Obligation Mix'),
                   const SizedBox(height: 16),
                   _buildChartSection(viewModel, currencyFormat, context),
@@ -49,6 +69,10 @@ class InsightsScreen extends ConsumerWidget {
                   _buildSectionHeader('AI Action Engine'),
                   const SizedBox(height: 16),
                   _buildAIIntelligenceSection(viewModel, context),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('🇮🇳 Tax Shield (Advisory)'),
+                  const SizedBox(height: 16),
+                  _buildTaxIntelligenceSection(viewModel, currencyFormat, context),
                   const SizedBox(height: 32),
                   _buildSectionHeader('Freedom Progress'),
                   const SizedBox(height: 16),
@@ -74,7 +98,7 @@ class InsightsScreen extends ConsumerWidget {
         fontSize: 10,
         fontWeight: FontWeight.w900,
         letterSpacing: 2.0,
-        color: AppTheme.primary.withOpacity(0.8),
+        color: AppTheme.primary.withValues(alpha: 0.8),
       ),
     );
   }
@@ -113,7 +137,7 @@ class InsightsScreen extends ConsumerWidget {
                     title: '',
                     radius: 25,
                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                    badgeWidget: _buildBadge('${((emiTotal / total) * 100).toInt()}%', AppTheme.primary),
+                    badgeWidget: _buildBadge('${total > 0 ? ((emiTotal / total) * 100).toInt() : 0}%', AppTheme.primary),
                     badgePositionPercentageOffset: 1.5,
                   ),
                   PieChartSectionData(
@@ -122,7 +146,7 @@ class InsightsScreen extends ConsumerWidget {
                     title: '',
                     radius: 25,
                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                    badgeWidget: _buildBadge('${((oneTimeTotal / total) * 100).toInt()}%', AppTheme.secondary),
+                    badgeWidget: _buildBadge('${total > 0 ? ((oneTimeTotal / total) * 100).toInt() : 0}%', AppTheme.secondary),
                     badgePositionPercentageOffset: 1.5,
                   ),
                 ],
@@ -148,7 +172,7 @@ class InsightsScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8)],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8)],
       ),
       child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
     );
@@ -166,17 +190,20 @@ class InsightsScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: color, 
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 6)],
+                boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6)],
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              text, 
-              style: GoogleFonts.inter(
-                fontSize: 10, 
-                color: Colors.grey.shade500, 
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
+            Flexible(
+              child: Text(
+                text, 
+                style: GoogleFonts.inter(
+                  fontSize: 10, 
+                  color: Colors.grey.shade500, 
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -213,8 +240,21 @@ class InsightsScreen extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey.shade400)),
-        Text(value, style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold, color: color)),
+        Expanded(
+          child: Text(
+            label, 
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value, 
+            style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold, color: color),
+          ),
+        ),
       ],
     );
   }
@@ -238,7 +278,7 @@ class InsightsScreen extends ConsumerWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(20),
           decoration: AppTheme.glassDecoration(context).copyWith(
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +287,7 @@ class InsightsScreen extends ConsumerWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                     child: Icon(_getAlertIcon(alert.type), color: color, size: 20),
                   ),
                   const SizedBox(width: 12),
@@ -279,7 +319,6 @@ class InsightsScreen extends ConsumerWidget {
       case AlertType.success: return Icons.check_circle_rounded;
       case AlertType.refinance: return Icons.analytics_rounded;
       case AlertType.info: return Icons.info_rounded;
-      default: return Icons.lightbulb_outline_rounded;
     }
   }
 
@@ -296,9 +335,9 @@ class InsightsScreen extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Center(
         child: Text(
@@ -320,20 +359,27 @@ class InsightsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('DEBT-FREE DATE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('MMMM yyyy').format(data.debtFreeDate),
-                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('DEBT-FREE DATE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        DateFormat('MMMM yyyy').format(data.debtFreeDate),
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: AppTheme.success.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                 child: Text(
                   '${data.daysLeft} DAYS LEFT',
                   style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w900, color: AppTheme.success),
@@ -394,8 +440,8 @@ class InsightsScreen extends ConsumerWidget {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primary.withOpacity(0.3),
-                    AppTheme.primary.withOpacity(0.0),
+                    AppTheme.primary.withValues(alpha: 0.3),
+                    AppTheme.primary.withValues(alpha: 0.0),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -430,14 +476,14 @@ class InsightsScreen extends ConsumerWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               strokeWidth: 1,
             ),
           ),
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (_) => Colors.black.withOpacity(0.8),
+              getTooltipColor: (_) => Colors.black.withValues(alpha: 0.8),
               getTooltipItems: (touchedSpots) {
                 return touchedSpots.map((spot) {
                   return LineTooltipItem(
@@ -449,6 +495,268 @@ class InsightsScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // --- Sandbox & Automator Custom UI Widgets --- //
+
+  Widget _buildStrategyPanel(InsightsState state, InsightsViewModel viewModel, NumberFormat format, BuildContext context) {
+    bool isAvalanche = state.strategy == RepaymentStrategy.avalanche;
+    double interestSaved = state.savingsDelta?['interestSaved'] ?? 0.0;
+    int monthsSaved = state.savingsDelta?['monthsSaved'] ?? 0;
+
+    return Container(
+      decoration: AppTheme.glassDecoration(context),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                     HapticService.selection();
+                     viewModel.setStrategy(RepaymentStrategy.snowball);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: !isAvalanche ? AppTheme.primary.withValues(alpha: 0.2) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: !isAvalanche ? AppTheme.primary : Colors.white10),
+                    ),
+                    child: Center(child: Text('SNOWBALL', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: !isAvalanche ? AppTheme.primary : Colors.grey))),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                     HapticService.selection();
+                     viewModel.setStrategy(RepaymentStrategy.avalanche);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isAvalanche ? AppTheme.secondary.withValues(alpha: 0.2) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isAvalanche ? AppTheme.secondary : Colors.white10),
+                    ),
+                    child: Center(child: Text('AVALANCHE', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: isAvalanche ? AppTheme.secondary : Colors.grey))),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          if (interestSaved > 0)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.bolt_rounded, color: AppTheme.success),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Optimized strategy saves theoretically up to ${format.format(interestSaved)} and $monthsSaved months.',
+                      style: GoogleFonts.inter(color: AppTheme.success, fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSandboxPanel(InsightsState state, InsightsViewModel viewModel, BuildContext context) {
+    int percentage = ((state.incomeMultiplier - 1.0) * 100).round();
+    String sign = percentage > 0 ? '+' : '';
+    
+    DateTime? simDate = state.simulatedFreedomData?.debtFreeDate;
+    
+    return Container(
+      decoration: AppTheme.glassDecoration(context),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: Text('Income Scaling', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: Colors.grey))),
+              Text('$sign$percentage%', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppTheme.primary, fontSize: 18)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: AppTheme.primary,
+              inactiveTrackColor: Colors.white10,
+              thumbColor: AppTheme.primary,
+              overlayColor: AppTheme.primary.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: state.incomeMultiplier,
+              min: 0.5,
+              max: 2.0,
+              divisions: 15,
+              onChanged: (val) {
+                // If not premium, snap back to 1.0 logic is already in ViewModel but UI needs to look smooth. 
+                viewModel.setIncomeMultiplier(val);
+              },
+            ),
+          ),
+          const Divider(height: 32, color: Colors.white10),
+          Text('Simulated Freedom Date', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: Colors.grey, fontSize: 10)),
+          const SizedBox(height: 4),
+          Text(
+            simDate != null ? DateFormat('MMMM yyyy').format(simDate) : 'Unknown',
+            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900),
+          ),
+          if (!state.isPremium) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  const Icon(Icons.lock_rounded, size: 14, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Duedo+ Pro required for full simulation', style: GoogleFonts.inter(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+  Widget _buildTaxIntelligenceSection(HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+    final savings = viewModel.taxSavings;
+    final total = savings['total'] ?? 0;
+    
+    if (total == 0) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: AppTheme.glassDecoration(context),
+        child: const Center(
+          child: Text(
+            'Categorize recurring items (80C, 80D) in Settings to see tax advisory.', 
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: AppTheme.glassDecoration(context),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ESTIMATED TAX SHIELD', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        format.format(total),
+                        style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.success),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.security_rounded, color: AppTheme.success, size: 32),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildTaxRow('80C (Capped)', format.format(savings['80C'] ?? 0), 150000 > 0 ? (savings['80C'] ?? 0) / 150000 : 0),
+          const SizedBox(height: 16),
+          _buildTaxRow('80D (Health)', format.format(savings['80D'] ?? 0), 25000 > 0 ? (savings['80D'] ?? 0) / 25000 : 0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaxRow(String label, String value, double progress) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(child: Text(label, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade400))),
+            Text(value, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress.clamp(0, 1),
+            backgroundColor: Colors.white10,
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.success.withValues(alpha: 0.7)),
+            minHeight: 4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMilestonesLocker(HomeViewModel viewModel, BuildContext context) {
+    final badges = viewModel.gamificationBadges;
+    return Container(
+      decoration: AppTheme.glassDecoration(context),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: badges.map((badge) {
+          final color = badge.isUnlocked ? AppTheme.primary : Colors.grey.shade800;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(badge.isUnlocked ? Icons.emoji_events_rounded : Icons.lock_rounded, color: color),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(badge.title, style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: badge.isUnlocked ? Colors.white : Colors.grey)),
+                      const SizedBox(height: 4),
+                      Text(badge.description, style: GoogleFonts.inter(fontSize: 11, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

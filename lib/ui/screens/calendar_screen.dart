@@ -80,16 +80,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     eventLoader: (day) => viewModel.getObligationsForDay(day),
                     calendarStyle: CalendarStyle(
                       todayDecoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.15), 
+                        color: AppTheme.primary.withValues(alpha: 0.15), 
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primary.withOpacity(0.4)),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
                       ),
                       selectedDecoration: BoxDecoration(
                         gradient: AppTheme.primaryGradient,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primary.withOpacity(0.4), 
+                            color: AppTheme.primary.withValues(alpha: 0.4), 
                             blurRadius: 15, 
                             spreadRadius: 2,
                             offset: const Offset(0, 4),
@@ -140,10 +140,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_available_rounded, size: 64, color: AppTheme.primary.withOpacity(0.2)),
+            Icon(Icons.event_available_rounded, size: 64, color: AppTheme.primary.withValues(alpha: 0.2)),
             const SizedBox(height: 16),
             const Text('Clear Schedule', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-            Text(DateFormat('MMMM dd, yyyy').format(date), style: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 12)),
+            Text(DateFormat('MMMM dd, yyyy').format(date), style: TextStyle(color: Colors.grey.withValues(alpha: 0.5), fontSize: 12)),
           ],
         ),
       );
@@ -162,7 +162,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             leading: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(Icons.payment_rounded, color: AppTheme.primary, size: 28),

@@ -31,19 +31,19 @@ class AppTheme {
         Positioned(
           top: -150,
           right: -100,
-          child: _buildAuroraGlow(primary.withOpacity(isDark ? 0.25 : 0.12), 450),
+          child: _buildAuroraGlow(primary.withValues(alpha: isDark ? 0.25 : 0.12), 450),
         ),
         // Secondary Aurora Glow
         Positioned(
           bottom: -50,
           left: -100,
-          child: _buildAuroraGlow(secondary.withOpacity(isDark ? 0.2 : 0.08), 400),
+          child: _buildAuroraGlow(secondary.withValues(alpha: isDark ? 0.2 : 0.08), 400),
         ),
         // Accent Aurora Glow
         Positioned(
           top: 250,
           left: -50,
-          child: _buildAuroraGlow(accent.withOpacity(isDark ? 0.1 : 0.05), 300),
+          child: _buildAuroraGlow(accent.withValues(alpha: isDark ? 0.1 : 0.05), 300),
         ),
       ],
     );
@@ -58,7 +58,7 @@ class AppTheme {
         gradient: RadialGradient(
           colors: [
             color,
-            color.withOpacity(0.4),
+            color.withValues(alpha: 0.4),
             Colors.transparent,
           ],
           stops: const [0.0, 0.4, 1.0],
@@ -77,16 +77,16 @@ class AppTheme {
     final baseColor = isDark ? Colors.white : Colors.black;
     
     return BoxDecoration(
-      color: baseColor.withOpacity(opacity),
+      color: baseColor.withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(32),
       border: Border.all(
-        color: baseColor.withOpacity(0.08),
+        color: baseColor.withValues(alpha: 0.08),
         width: 1.5,
       ),
       boxShadow: [
         if (hasInnerGlow)
           BoxShadow(
-            color: baseColor.withOpacity(0.03),
+            color: baseColor.withValues(alpha: 0.03),
             blurRadius: 10,
             spreadRadius: -2,
             offset: const Offset(1, 1),
@@ -109,7 +109,6 @@ class AppTheme {
 
   static ThemeData lightTheme(ThemeData base) {
     return base.copyWith(
-      useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.light,
@@ -136,7 +135,7 @@ class AppTheme {
         color: cardLight,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: Colors.black.withOpacity(0.05)),
+          side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
         ),
       ),
     );
@@ -144,7 +143,6 @@ class AppTheme {
 
   static ThemeData darkTheme(ThemeData base) {
     return base.copyWith(
-      useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.dark,
@@ -169,7 +167,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: Colors.white.withOpacity(0.05)),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
         ),
         color: cardDark,
       ),

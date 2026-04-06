@@ -1,6 +1,7 @@
 enum ObligationType {
   emi,
   oneTime,
+  recurring,
 }
 
 enum PriorityLevel {

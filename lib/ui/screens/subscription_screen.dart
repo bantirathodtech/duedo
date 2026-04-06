@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -57,7 +56,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       letterSpacing: 2,
                     ),
                   ),
@@ -89,7 +88,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     title: 'Monthly', 
                     price: '50₹', 
                     subtitle: 'Billed monthly. Cancel anytime.',
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                   const SizedBox(height: 16),
                   _buildPricingCard(
@@ -99,7 +98,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     price: '500₹', 
                     subtitle: 'Save 100₹ per year. Best for planners.',
                     isPopular: true,
-                    color: AppTheme.primary.withOpacity(0.15),
+                    color: AppTheme.primary.withValues(alpha: 0.15),
                   ),
                   const SizedBox(height: 16),
                   _buildPricingCard(
@@ -108,7 +107,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     title: 'Lifetime', 
                     price: '5000₹', 
                     subtitle: 'All future features. One payment.',
-                    color: const Color(0xFFFFD700).withOpacity(0.1),
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                   ),
                   
                   const SizedBox(height: 40),
@@ -117,7 +116,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     'Secured by Duedo encryption',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -138,7 +137,7 @@ class SubscriptionScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: AppTheme.primary, size: 24),
@@ -149,7 +148,7 @@ class SubscriptionScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                Text(desc, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withOpacity(0.5))),
+                Text(desc, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
               ],
             ),
           ),
@@ -179,7 +178,7 @@ class SubscriptionScreen extends ConsumerWidget {
           color: color,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isPopular ? AppTheme.primary : Colors.white.withOpacity(0.1),
+            color: isPopular ? AppTheme.primary : Colors.white.withValues(alpha: 0.1),
             width: isPopular ? 2 : 1,
           ),
         ),
@@ -204,7 +203,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     ),
                   Text(title, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+                  Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
                 ],
               ),
             ),
@@ -234,7 +233,7 @@ class SubscriptionScreen extends ConsumerWidget {
     await Future.delayed(const Duration(seconds: 2));
 
     // Update DB
-    final companion = const UserSettingsCompanion(
+    const companion = UserSettingsCompanion(
       id: drift.Value(1),
       isPremium: drift.Value(true),
     );

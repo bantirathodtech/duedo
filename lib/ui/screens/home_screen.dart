@@ -9,6 +9,8 @@ import '../../models/app_enums.dart';
 import '../../services/financial_logic_service.dart';
 import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
+import '../widgets/snowball_curve_chart.dart';
+import 'milestones_screen.dart';
 import 'add_obligation_screen.dart';
 import 'settings_screen.dart';
 
@@ -21,6 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
   bool _showSuccessAnimation = false;
+  int _selectedTab = 0; // 0: Debts/Goals, 1: Monthly Essentials
 
   void _triggerSuccess() {
     setState(() => _showSuccessAnimation = true);
@@ -32,9 +35,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
-    final viewModel = ref.watch(homeViewModelProvider.notifier);
+    final viewModel = ref.read(homeViewModelProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
+    // Trigger success animation when a new milestone is unlocked
+    ref.listen(homeViewModelProvider.select((s) => s.hasNewlyUnlockedMilestone), (previous, next) {
+      if (next == true) {
+        _triggerSuccess();
+        viewModel.clearNewlyUnlockedMilestone();
+      }
+    });
+
     final currencyFormat = NumberFormat.simpleCurrency(
       name: state.settings?.currency ?? '₹',
       decimalDigits: 0,
@@ -74,30 +85,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                           ),
                         ),
                       ),
-                      
                       // Obligations List
+                      if (_selectedTab == 0 && _getFilteredObligations(viewModel).isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                            child: SnowballCurveChart(
+                              monthlyBalances: viewModel.freedomData.monthlyBalances,
+                              monthlyWealth: viewModel.freedomData.monthlyWealth,
+                              isDark: isDark,
+                            ),
+                          ),
+                        ),
+
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        sliver: SliverReorderableList(
-                          itemCount: state.obligations.length,
-                          itemBuilder: (context, index) {
-                            final sortedList = viewModel.sortedObligations;
-                            if (index >= sortedList.length) return const SizedBox();
-                            final obligation = sortedList[index];
-                            return ReorderableDelayedDragStartListener(
-                              key: ValueKey('obligation_${obligation.id}'),
-                              index: index,
-                              child: _StaggeredEntry(
-                                delay: 400 + (index * 100),
-                                child: _buildObligationCard(context, obligation, currencyFormat, ref, index, isDark),
-                              ),
-                            );
-                          },
-                          onReorder: (oldIndex, newIndex) {
-                            HapticService.selection();
-                            viewModel.reorderObligations(oldIndex, newIndex);
-                          },
-                        ),
+                        sliver: _getFilteredObligations(viewModel).isEmpty 
+                          ? SliverToBoxAdapter(
+                              child: _buildEmptyState(isDark),
+                            )
+                          : SliverReorderableList(
+                              itemCount: _getFilteredObligations(viewModel).length,
+                              itemBuilder: (context, index) {
+                                final filteredList = _getFilteredObligations(viewModel);
+                                if (index >= filteredList.length) return const SizedBox();
+                                final obligation = filteredList[index];
+                                return ReorderableDelayedDragStartListener(
+                                  key: ValueKey('obligation_${obligation.id}'),
+                                  index: index,
+                                  child: _StaggeredEntry(
+                                    delay: 400 + (index * 100),
+                                    child: _buildObligationCard(context, obligation, currencyFormat, ref, index, isDark),
+                                  ),
+                                );
+                              },
+                              onReorder: (oldIndex, newIndex) {
+                                HapticService.selection();
+                                viewModel.reorderObligations(
+                                  oldIndex, 
+                                  newIndex, 
+                                  filteredList: _getFilteredObligations(viewModel),
+                                );
+                              },
+                            ),
                       ),
                       
                       const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -136,33 +166,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'TOTAL INCOME', 
-                          style: GoogleFonts.inter(
-                            color: Colors.grey.shade500, 
-                            fontSize: 10, 
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 2.0,
+                        _HealthScoreRing(score: viewModel.healthScore),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'TOTAL INCOME', 
+                                      style: GoogleFonts.inter(
+                                        color: Colors.grey.shade500, 
+                                        fontSize: 10, 
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 2.0,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.edit_note_rounded, size: 14, color: Colors.grey.shade500),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      currencyFormat.format(state.settings?.monthlyIncome ?? 0), 
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 26, 
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -1.0,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              _buildStreakBadge(state.settings?.paymentStreak ?? 0),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.edit_note_rounded, size: 14, color: Colors.grey.shade500),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          currencyFormat.format(state.settings?.monthlyIncome ?? 0), 
-                          style: GoogleFonts.outfit(
-                            fontSize: 34, 
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.5,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(width: 12),
-                        _buildStreakBadge(state.settings?.paymentStreak ?? 0),
                       ],
                     ),
                   ],
@@ -192,29 +240,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   Widget _buildStreakBadge(int streak) {
-    if (streak == 0) return const SizedBox();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.fireplace_rounded, color: Colors.orange, size: 14),
-          const SizedBox(width: 4),
-          Text(
-            '$streak MONTH STREAK',
-            style: GoogleFonts.inter(
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              color: Colors.orange,
-              letterSpacing: 1,
-            ),
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MilestonesScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.fireplace_rounded, color: Colors.orange, size: 14),
+              const SizedBox(width: 4),
+              Text(
+                '$streak MONTH STREAK',
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.orange,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.emoji_events_rounded, color: Colors.orange, size: 12),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -296,20 +357,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
 
   Widget _buildMainStatCard(String title, String value, LinearGradient gradient, bool isDark, IconData icon) {
     return Container(
-      height: 140,
-      padding: const EdgeInsets.all(24),
-      decoration: AppTheme.glassDecoration(context).copyWith(
-        gradient: LinearGradient(
-          colors: [
-            gradient.colors.first.withOpacity(0.8),
-            gradient.colors.last.withOpacity(0.6),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: gradient,
         boxShadow: [
           BoxShadow(
-            color: gradient.colors.first.withOpacity(0.2),
+            color: gradient.colors.first.withValues(alpha: 0.2),
             blurRadius: 30,
             spreadRadius: -10,
             offset: const Offset(0, 15),
@@ -327,7 +381,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 child: Text(
                   title, 
                   style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.8), 
+                    color: Colors.white.withValues(alpha: 0.8), 
                     fontSize: 10, 
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
@@ -335,15 +389,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(icon, color: Colors.white.withOpacity(0.6), size: 20),
+              Icon(icon, color: Colors.white.withValues(alpha: 0.6), size: 20),
             ],
           ),
-          Text(
-            value,
-            style: GoogleFonts.outfit(
-              color: Colors.white, 
-              fontSize: 28, 
-              fontWeight: FontWeight.w900,
+          const SizedBox(height: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.bottomLeft,
+              child: Text(
+                value,
+                style: GoogleFonts.outfit(
+                  color: Colors.white, 
+                  fontSize: 28, 
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                ),
+              ),
             ),
           ),
         ],
@@ -354,7 +416,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   Widget _buildSecondaryStatCard(String title, String value, Color color, bool isDark, IconData icon) {
     return Container(
       height: 100,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: AppTheme.glassDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,23 +429,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 child: Text(
                   title, 
                   style: GoogleFonts.inter(
-                    color: Colors.grey.shade500, 
-                    fontSize: 9, 
+                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.6), 
+                    fontSize: 10, 
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(icon, color: color.withOpacity(0.5), size: 16),
+              Icon(icon, color: color.withValues(alpha: 0.5), size: 16),
             ],
           ),
-          Text(
-            value,
-            style: GoogleFonts.outfit(
-              color: color, 
-              fontSize: 20, 
-              fontWeight: FontWeight.w900,
+          const SizedBox(height: 4),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.bottomLeft,
+              child: Text(
+                value,
+                style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white : Colors.black, 
+                  fontSize: 24, 
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                ),
+              ),
             ),
           ),
         ],
@@ -395,7 +465,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -444,9 +514,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding: const EdgeInsets.all(16),
                 decoration: AppTheme.glassDecoration(context).copyWith(
-                  border: Border.all(color: tint.withOpacity(0.3)),
+                  border: Border.all(color: tint.withValues(alpha: 0.3)),
                   gradient: LinearGradient(
-                    colors: [tint.withOpacity(0.1), tint.withOpacity(0.02)],
+                    colors: [tint.withValues(alpha: 0.1), tint.withValues(alpha: 0.02)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -480,27 +550,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     );
   }
 
+  List<Obligation> _getFilteredObligations(HomeViewModel viewModel) {
+    final sorted = viewModel.sortedObligations;
+    if (_selectedTab == 0) {
+      // Debts, Bills, Goals (One-time only)
+      return sorted.where((o) => o.type == ObligationType.oneTime).toList();
+    } else {
+      // Monthly Essentials & EMIs (Monthly Compulsory)
+      return sorted.where((o) => o.type != ObligationType.oneTime).toList();
+    }
+  }
+
   Widget _buildListHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
-        Text(
-          'Your Obligations',
-          style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'Your Obligations',
+                style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'DRAG TO SORT',
+                style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey),
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 20),
+        // Premium Tab Switcher
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          height: 50,
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+            color: Colors.black.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: Text(
-            'DRAG TO SORT',
-            style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey),
+          child: Row(
+            children: [
+              Expanded(child: _buildTabItem(0, 'DEBTS & GOALS', Icons.track_changes_rounded)),
+              Expanded(child: _buildTabItem(1, 'MONTHLY PAYS', Icons.repeat_rounded)),
+            ],
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildTabItem(int index, String label, IconData icon) {
+    final isSelected = _selectedTab == index;
+    return GestureDetector(
+        onTap: () {
+          HapticService.selection();
+          setState(() => _selectedTab = index);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuint,
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ] : [],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: isSelected ? Colors.white : Colors.grey),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                  color: isSelected ? Colors.white : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
   }
 
   Widget _buildObligationCard(
@@ -558,7 +704,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(isEmi ? Icons.repeat_rounded : Icons.calendar_today_rounded, color: color, size: 22),
@@ -580,6 +726,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark) {
+    final isDebts = _selectedTab == 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isDebts ? Icons.track_changes_rounded : Icons.repeat_rounded,
+            size: 64,
+            color: AppTheme.primary.withValues(alpha: 0.2),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            isDebts ? 'No Active Goals or Debts' : 'No Monthly Essentials',
+            style: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isDebts 
+              ? 'Clear slate! Time to define your next financial milestone.' 
+              : 'Add your recurring expenses like Rent or Insurance in Settings.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: Colors.grey,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -640,7 +825,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -664,7 +849,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: AppTheme.primary.withOpacity(0.1),
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
               valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
@@ -699,7 +884,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   Widget _buildSuccessOverlay() {
     return Positioned.fill(
       child: Container(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         child: Center(
           child: Lottie.network(
             'https://assets9.lottiefiles.com/packages/lf20_m34959o6.json',
@@ -760,12 +945,15 @@ class _FreedomCountdownRing extends StatelessWidget {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '${data.daysLeft}',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: color,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${data.daysLeft}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: color,
+                      ),
                     ),
                   ),
                   Text(
@@ -773,7 +961,7 @@ class _FreedomCountdownRing extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 8,
                       fontWeight: FontWeight.w900,
-                      color: color.withOpacity(0.6),
+                      color: color.withValues(alpha: 0.6),
                       letterSpacing: 1,
                     ),
                   ),
@@ -789,7 +977,81 @@ class _FreedomCountdownRing extends StatelessWidget {
             fontSize: 8,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
-            color: color.withOpacity(0.8),
+            color: color.withValues(alpha: 0.8),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HealthScoreRing extends StatelessWidget {
+  final int score;
+
+  const _HealthScoreRing({required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    const maxScore = 1000.0;
+    final progress = (score / maxScore).clamp(0.0, 1.0);
+    // Grade the color: < 400 is danger, 400-700 is warning, > 700 is success
+    Color color = AppTheme.danger;
+    if (score >= 700) {
+      color = AppTheme.success;
+    } else if (score >= 400) {
+      color = AppTheme.warning;
+    }
+
+    String grade = "POOR";
+    if (score >= 800) {
+      grade = "EXCELLENT";
+    } else if (score >= 600) {
+      grade = "GOOD";
+    } else if (score >= 400) {
+      grade = "FAIR";
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          width: 60,
+          height: 60,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: progress),
+                duration: const Duration(seconds: 2),
+                curve: Curves.easeOutQuart,
+                builder: (context, value, _) => CustomPaint(
+                  size: const Size(60, 60),
+                  painter: _GaugePainter(percentage: value, color: color),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$score',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          grade,
+          style: GoogleFonts.inter(
+            fontSize: 7,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+            color: color.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -811,7 +1073,7 @@ class _GaugePainter extends CustomPainter {
 
     // Background track
     final bgPaint = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -916,10 +1178,10 @@ class _ProjectionChip extends StatelessWidget {
           margin: const EdgeInsets.all(2),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? (isDark ? Colors.white.withOpacity(0.1) : Colors.white) : Colors.transparent,
+            color: isSelected ? (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white) : Colors.transparent,
             borderRadius: BorderRadius.circular(14),
             boxShadow: isSelected && !isDark ? [
-              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
+              BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))
             ] : null,
           ),
           child: Center(
@@ -928,7 +1190,7 @@ class _ProjectionChip extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                color: isSelected ? AppTheme.primary : (isDark ? Colors.white.withOpacity(0.5) : Colors.grey.shade600),
+                color: isSelected ? AppTheme.primary : (isDark ? Colors.white.withValues(alpha: 0.5) : Colors.grey.shade600),
               ),
             ),
           ),
@@ -948,7 +1210,7 @@ class _StaggeredEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 600),
       curve: Curves.easeOutQuint,
       builder: (context, value, child) {
         return AnimatedContainer(

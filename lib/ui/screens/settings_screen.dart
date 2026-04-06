@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:google_fonts/google_fonts.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../services/database.dart';
 import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
+import '../../repositories/obligation_repository.dart';
+import '../../models/app_enums.dart';
+import '../../services/vault_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -14,23 +18,29 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _incomeController = TextEditingController();
-  final _paydayController = TextEditingController();
+  late TextEditingController _incomeController;
+  late TextEditingController _paydayController;
   String _selectedCurrency = '₹';
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final settings = ref.read(homeViewModelProvider).settings;
-      if (settings != null) {
-        _incomeController.text = settings.monthlyIncome.toStringAsFixed(0);
-        _paydayController.text = settings.paydayOfMonth.toString();
-        setState(() {
-          _selectedCurrency = settings.currency;
-        });
-      }
+    final settings = ref.read(homeViewModelProvider).settings;
+    _incomeController = TextEditingController(text: settings?.monthlyIncome.toStringAsFixed(0) ?? '0');
+    _paydayController = TextEditingController(text: settings?.paydayOfMonth.toString() ?? '1');
+    _selectedCurrency = settings?.currency ?? '₹';
+    _loadVaultStatus();
+
+    // Real-time updates for the "True Disposable Income" card
+    _incomeController.addListener(() {
+      if (mounted) setState(() {});
     });
+  }
+
+  bool _vaultEnabled = false;
+  void _loadVaultStatus() async {
+    final enabled = await ref.read(vaultServiceProvider).isVaultEnabled();
+    if (mounted) setState(() => _vaultEnabled = enabled);
   }
 
   @override
@@ -41,10 +51,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _saveSettings() async {
+    final incomeStr = _incomeController.text.trim();
+    final paydayStr = _paydayController.text.trim();
+
+    if (incomeStr.isEmpty) {
+      _showError('Please enter your monthly income');
+      return;
+    }
+
+    final income = double.tryParse(incomeStr) ?? -1;
+    if (income < 0) {
+      _showError('Please enter a valid positive income');
+      return;
+    }
+
+    final payday = int.tryParse(paydayStr) ?? -1;
+    if (payday < 1 || payday > 31) {
+      _showError('Payday must be between 1 and 31');
+      return;
+    }
+
     HapticService.success();
-    final income = double.tryParse(_incomeController.text) ?? 0.0;
-    final payday = int.tryParse(_paydayController.text) ?? 1;
-    
     await ref.read(homeViewModelProvider.notifier).updateSettings(
       UserSettingsCompanion(
         id: const drift.Value(1),
@@ -57,13 +84,102 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Settings secure', style: TextStyle(fontWeight: FontWeight.bold)), 
+          content: Text('Financial profile updated', style: TextStyle(fontWeight: FontWeight.bold)), 
           backgroundColor: AppTheme.success,
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pop(context);
     }
+  }
+
+  void _showError(String message) {
+    HapticService.warning();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: AppTheme.danger,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _addRecurring() {
+    String title = '';
+    double amount = 0;
+    String? taxCategory;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Add Compulsory Payment', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            Text('Rent, Insurance, PF, utilities, etc.', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            const SizedBox(height: 24),
+            TextField(
+              decoration: _inputDecoration('Expense Name (e.g. Rent)'),
+              onChanged: (v) => title = v,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              decoration: _inputDecoration('Monthly Amount'),
+              keyboardType: TextInputType.number,
+              onChanged: (v) => amount = double.tryParse(v) ?? 0,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              dropdownColor: const Color(0xFF1E1E1E),
+              decoration: _inputDecoration('🇮🇳 Tax Category (Optional)'),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('None', style: TextStyle(color: Colors.grey))),
+                DropdownMenuItem(value: '80C', child: Text('80C (LIC, PF, ELSS)', style: TextStyle(color: Colors.white))),
+                DropdownMenuItem(value: '80D', child: Text('80D (Health Insurance)', style: TextStyle(color: Colors.white))),
+              ],
+              onChanged: (v) => taxCategory = v,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (title.isNotEmpty && amount > 0) {
+                    final repo = ref.read(obligationRepositoryProvider);
+                    await repo.createObligation(ObligationsCompanion(
+                      title: drift.Value(title),
+                      amount: drift.Value(amount),
+                      type: const drift.Value(ObligationType.recurring),
+                      startDate: drift.Value(DateTime.now()),
+                      category: const drift.Value('Fixed'),
+                      priority: const drift.Value(PriorityLevel.high),
+                      totalBalance: drift.Value(amount),
+                      taxCategory: drift.Value(taxCategory),
+                    ));
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    HapticService.success();
+                  }
+                },
+                style: _primaryButtonStyle(),
+                child: const Text('Add to Planner'),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -71,9 +187,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Preferences'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('FINANCIAL PLANNER'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Stack(
         children: [
@@ -85,8 +203,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionCard(
-                    title: 'Financial Profile',
-                    description: 'Used for precise pressure calculations',
+                    title: '1. Total Income',
+                    description: 'Enter your monthly in-hand salary',
                     child: Column(
                       children: [
                         _buildTextField(
@@ -95,20 +213,99 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           prefixText: '$_selectedCurrency ',
                           icon: Icons.account_balance_wallet_rounded,
                         ),
-                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSectionCard(
+                    title: '2. Compulsory Payments',
+                    description: 'Rent, Insurance, PF, and Living Expenses',
+                    child: Column(
+                      children: [
+                        _buildRecurringList(),
+                        const SizedBox(height: 16),
+                        _buildAddRecurringButton(),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildDisposableIncomeCard(),
+                  const SizedBox(height: 32),
+                  _buildSectionCard(
+                    title: 'General Preferences',
+                    description: 'Customize notifications and currency',
+                    child: Column(
+                      children: [
                         _buildTextField(
                           controller: _paydayController,
                           label: 'Payday (Day of Month, 1-31)',
                           icon: Icons.calendar_month_rounded,
                         ),
+                        const SizedBox(height: 24),
+                        _buildCurrencyPicker(),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   _buildSectionCard(
-                    title: 'Display & Region',
-                    description: 'Customize your visual experience',
-                    child: _buildCurrencyPicker(),
+                    title: '🛡️ Security Vault',
+                    description: 'Lock your financial data behind biometrics',
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        'Biometric App Lock',
+                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Use FaceID/Fingerprint to open Duedo',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      ),
+                      value: _vaultEnabled,
+                      activeTrackColor: AppTheme.primary,
+                      onChanged: (val) async {
+                        final service = ref.read(vaultServiceProvider);
+                        if (val) {
+                          final success = await service.authenticate(reason: 'Enable Vault security');
+                          if (success) {
+                            await service.setVaultEnabled(true);
+                            setState(() => _vaultEnabled = true);
+                          }
+                        } else {
+                          final success = await service.authenticate(reason: 'Disable Vault security');
+                          if (success) {
+                            await service.setVaultEnabled(false);
+                            setState(() => _vaultEnabled = false);
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSectionCard(
+                    title: '🤖 Automator (SMS Sync)',
+                    description: 'Auto-detect EMI payments from Bank SMS',
+                    child: SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        'Enable Automated Sync',
+                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Supports HDFC, SBI, ICICI, etc.',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      ),
+                      value: ref.watch(homeViewModelProvider).settings?.smsSyncEnabled ?? false,
+                      activeTrackColor: AppTheme.primary,
+                      onChanged: (val) async {
+                        HapticService.selection();
+                        await ref.read(homeViewModelProvider.notifier).updateSettings(
+                          UserSettingsCompanion(
+                            id: const drift.Value(1),
+                            smsSyncEnabled: drift.Value(val),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 60),
                   _buildSaveButton(),
@@ -124,14 +321,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildSectionCard({required String title, required String description, required Widget child}) {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: AppTheme.glassDecoration(context),
-      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.primary, letterSpacing: 1.1)),
+          Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
           const SizedBox(height: 4),
-          Text(description, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+          Text(description, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
           const SizedBox(height: 24),
           child,
         ],
@@ -139,52 +336,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String label, String? prefixText, IconData? icon}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w500),
-          prefixText: prefixText,
-          prefixStyle: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
-          prefixIcon: icon != null ? Icon(icon, color: AppTheme.primary, size: 22) : null,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))],
-      ),
-      child: ElevatedButton(
-        onPressed: _saveSettings,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-        child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.1)),
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? prefixText,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixText: prefixText,
+        prefixIcon: Icon(icon, color: AppTheme.primary, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primary, width: 2)),
       ),
     );
   }
@@ -208,10 +376,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: isSelected ? AppTheme.primaryGradient : null,
-              color: isSelected ? null : Colors.white.withOpacity(0.05),
+              color: isSelected ? null : Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.1)),
-              boxShadow: isSelected ? [BoxShadow(color: AppTheme.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
+              border: Border.all(color: isSelected ? Colors.transparent : Colors.white.withValues(alpha: 0.1)),
+              boxShadow: isSelected ? [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
             ),
             child: Text(
               c,
@@ -224,6 +392,149 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildRecurringList() {
+    final state = ref.watch(homeViewModelProvider);
+    final recurring = state.obligations.where((o) => o.type == ObligationType.recurring && o.isActive).toList();
+
+    if (recurring.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.02), borderRadius: BorderRadius.circular(12)),
+        child: const Text('No compulsory payments added yet.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+      );
+    }
+
+    return Column(
+      children: recurring.map((ob) => Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Row(
+          children: [
+             Expanded(
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text(ob.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                   if (ob.taxCategory != null)
+                     Container(
+                       margin: const EdgeInsets.only(top: 4),
+                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                       decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                       child: Text(ob.taxCategory!, style: const TextStyle(color: AppTheme.success, fontSize: 9, fontWeight: FontWeight.bold)),
+                     ),
+                 ],
+               ),
+             ),
+             Text('$_selectedCurrency ${ob.amount.toStringAsFixed(0)}', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900)),
+             const SizedBox(width: 8),
+             IconButton(
+               icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+               onPressed: () {
+                 HapticService.warning();
+                 ref.read(obligationRepositoryProvider).deleteObligation(ob.id);
+               },
+             ),
+           ],
+         ),
+       )).toList(),
+     );
+   }
+
+  Widget _buildAddRecurringButton() {
+    return GestureDetector(
+      onTap: _addRecurring,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_circle_outline, color: AppTheme.primary, size: 18),
+            SizedBox(width: 8),
+            Text('Add Compulsory Payment', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisposableIncomeCard() {
+    final state = ref.watch(homeViewModelProvider);
+    final income = double.tryParse(_incomeController.text) ?? (state.settings?.monthlyIncome ?? 0.0);
+    final recurringTotal = state.totalMonthlyRecurring;
+    final disposable = income - recurringTotal;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: disposable > 0 ? AppTheme.primary.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: (disposable > 0 ? AppTheme.primary : Colors.red).withValues(alpha: 0.3)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('TRUE DISPOSABLE INCOME', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              const SizedBox(height: 4),
+              Text('Available for debt & goals', style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
+            ],
+          ),
+          Text(
+            '$_selectedCurrency ${disposable.toStringAsFixed(0)}',
+            style: GoogleFonts.inter(
+              fontSize: 24, 
+              fontWeight: FontWeight.w900, 
+              color: disposable > 0 ? Colors.white : Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primary, width: 1.5)),
+    );
+  }
+
+  static ButtonStyle _primaryButtonStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: AppTheme.primary,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: _saveSettings,
+        style: _primaryButtonStyle(),
+        child: const Text('Save Financial Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 }

@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:drift/drift.dart' as drift;
 
+import 'package:share_plus/share_plus.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../services/database.dart';
 import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
-import 'subscription_screen.dart';
+
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -24,6 +28,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String _themeMode = 'system';
   bool _isPremium = false;
   bool _initialized = false;
+  final _screenshotController = ScreenshotController();
 
   @override
   void dispose() {
@@ -93,6 +98,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       'Powering the Action Engine with accurate baseline context.',
                       style: GoogleFonts.inter(color: Colors.grey, fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
                     ),
+                    const SizedBox(height: 32),
+                    
+                    _buildSocialMasteryCard(state),
+                    
                     const SizedBox(height: 40),
 
                     _buildSectionHeader(Icons.account_balance_wallet_rounded, 'Income Baseline'),
@@ -152,7 +161,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+            Expanded(
+              child: Text(
+                title, 
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
           ],
         ),
@@ -165,7 +180,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         Icon(icon, size: 20, color: AppTheme.primary),
         const SizedBox(width: 12),
-        Text(title, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800)),
+        Expanded(
+          child: Text(
+            title, 
+            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }
@@ -198,9 +219,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Day of Month', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                Expanded(
+                  child: Text(
+                    'Day of Month', 
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 Text(
-                  '${_payday}${_getDaySuffix(_payday)}', 
+                  '$_payday${_getDaySuffix(_payday)}', 
                   style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.primary)
                 ),
               ],
@@ -210,9 +237,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: AppTheme.primary,
-              inactiveTrackColor: AppTheme.primary.withOpacity(0.1),
+              inactiveTrackColor: AppTheme.primary.withValues(alpha: 0.1),
               thumbColor: AppTheme.primary,
-              overlayColor: AppTheme.primary.withOpacity(0.2),
+              overlayColor: AppTheme.primary.withValues(alpha: 0.2),
               trackHeight: 6,
             ),
             child: Slider(
@@ -254,84 +281,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildPlanStatus(bool isDark) {
-    return Container(
-      decoration: AppTheme.glassDecoration(context).copyWith(
-        border: Border.all(
-          color: _isPremium ? AppTheme.primary.withOpacity(0.5) : Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CURRENT PLAN',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.grey,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _isPremium ? 'Duedo+ Pro' : 'Duedo Free',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: _isPremium ? AppTheme.primary : null,
-                    ),
-                  ),
-                ],
-              ),
-              if (_isPremium)
-                const Icon(Icons.verified_rounded, color: AppTheme.primary, size: 32)
-              else
-                const Icon(Icons.shield_outlined, color: Colors.grey, size: 32),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            _isPremium 
-              ? 'You are currently protected by our elite ad-free intelligence engine.' 
-              : 'You are currently seeing 30-second ads upon app opening.',
-            style: GoogleFonts.inter(fontSize: 13, color: Colors.grey, height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          if (!_isPremium)
-            ElevatedButton(
-              onPressed: () {
-                HapticService.selection();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: Text(
-                'UPGRADE TO DUEDO+',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSaveButton() {
     return InkWell(
       onTap: () {
@@ -346,7 +295,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           color: AppTheme.primary,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: AppTheme.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))
+            BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))
           ],
         ),
         alignment: Alignment.center,
@@ -356,6 +305,100 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSocialMasteryCard(HomeState state) {
+    if (state.isLoading) return const SizedBox();
+    
+    final notifier = ref.read(homeViewModelProvider.notifier);
+    final rank = notifier.financialRank;
+    final id = notifier.anonymousUserId;
+
+    return Screenshot(
+      controller: _screenshotController,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: AppTheme.glassDecoration(context).copyWith(
+          gradient: LinearGradient(
+            colors: [AppTheme.primary.withValues(alpha: 0.2), Colors.transparent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ANONYMOUS GLOBAL ID', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
+                      Text(id, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white), overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    rank,
+                    style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, color: AppTheme.primary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('SOCIAL STANDING', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
+                      const SizedBox(height: 4),
+                      Text('Global Elite Financial Class', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: _shareSuccessCard,
+                  icon: const Icon(Icons.share_rounded, color: AppTheme.primary),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white10,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareSuccessCard() async {
+    HapticService.success();
+    final notifier = ref.read(homeViewModelProvider.notifier);
+    final rank = notifier.financialRank;
+    
+    final image = await _screenshotController.capture();
+    if (image != null) {
+      final directory = await getTemporaryDirectory();
+      final imagePath = await File('${directory.path}/duedo_rank.png').create();
+      await imagePath.writeAsBytes(image);
+      
+      await Share.shareXFiles(
+        [XFile(imagePath.path)],
+        text: 'I\'m in the $rank of the world\'s financially disciplined on Duedo. 🚀 #FinancialFreedom #Duedo',
+      );
+    }
   }
 
   String _getDaySuffix(int day) {

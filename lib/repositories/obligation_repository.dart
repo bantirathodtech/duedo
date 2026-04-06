@@ -102,7 +102,7 @@ class ObligationRepository {
       final updatedEmiPaidMonths = (obligation.emiPaidMonths) + 1;
       final isFinished = updatedEmiPaidMonths >= (obligation.emiDurationMonths ?? 0);
       
-      final nextDueDate = obligation.nextDueDate?.add(const Duration(days: 31)); 
+      final nextDueDate = _addOneMonth(obligation.nextDueDate ?? obligation.startDate); 
 
       final updated = obligation.copyWith(
         emiPaidMonths: updatedEmiPaidMonths,
@@ -206,6 +206,21 @@ class ObligationRepository {
         scheduledDate: DateTime(dayBefore.year, dayBefore.month, dayBefore.day, 9, 30),
       );
     }
+  }
+
+  DateTime _addOneMonth(DateTime date) {
+    int nextMonth = date.month + 1;
+    int nextYear = date.year;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+    
+    // Find the last day of the next month to prevent overflow (e.g. Jan 31 -> Feb 28)
+    int lastDayOfNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+    int nextDay = date.day > lastDayOfNextMonth ? lastDayOfNextMonth : date.day;
+    
+    return DateTime(nextYear, nextMonth, nextDay, date.hour, date.minute);
   }
 }
 

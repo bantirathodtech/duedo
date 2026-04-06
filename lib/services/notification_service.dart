@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'dart:io';
@@ -56,7 +57,7 @@ class NotificationService {
       title: title,
       body: body,
       scheduledDate: tzDate,
-      notificationDetails: NotificationDetails(
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'due_dates',
           'Due Date Reminders',
@@ -64,9 +65,9 @@ class NotificationService {
           importance: Importance.max,
           priority: Priority.high,
         ),
-        iOS: const DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       // Note: uiLocalNotificationDateInterpretation was removed in v21.0.0
     );
   }
@@ -80,7 +81,7 @@ class NotificationService {
       id: id,
       title: title,
       body: body,
-      notificationDetails: NotificationDetails(
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'ai_alerts',
           'AI Financial Alerts',
@@ -88,7 +89,7 @@ class NotificationService {
           importance: Importance.max,
           priority: Priority.high,
         ),
-        iOS: const DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(),
       ),
     );
   }
@@ -97,3 +98,5 @@ class NotificationService {
     await _notifications.cancel(id: id);
   }
 }
+
+final notificationServiceProvider = Provider((ref) => NotificationService());

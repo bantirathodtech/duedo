@@ -9,6 +9,7 @@ import '../../services/haptic_service.dart';
 import '../../repositories/obligation_repository.dart';
 import '../../models/app_enums.dart';
 import '../../services/vault_service.dart';
+import '../../services/supabase_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -281,7 +282,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildSectionCard(
+                   _buildSectionCard(
                     title: '🤖 Automator (SMS Sync)',
                     description: 'Auto-detect EMI payments from Bank SMS',
                     child: SwitchListTile.adaptive(
@@ -307,6 +308,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       },
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  _buildCloudSyncSection(),
                   const SizedBox(height: 60),
                   _buildSaveButton(),
                 ],
@@ -523,6 +526,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 0,
+    );
+  }
+
+  Widget _buildCloudSyncSection() {
+    final supabaseService = ref.read(supabaseServiceProvider);
+    final isAuth = supabaseService.isAuthenticated;
+    final user = supabaseService.currentUser;
+
+    return _buildSectionCard(
+      title: '🌐 Cloud Sync & Account',
+      description: 'Sync your data across all devices',
+      child: Column(
+        children: [
+          if (isAuth) ...[
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                child: const Icon(Icons.person, color: AppTheme.primary),
+              ),
+              title: Text(user?.email ?? 'Member', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Account linked & syncing', style: TextStyle(color: AppTheme.success, fontSize: 12)),
+              trailing: IconButton(
+                icon: const Icon(Icons.logout_rounded, color: Colors.grey),
+                onPressed: () async {
+                  HapticService.warning();
+                  await supabaseService.signOut();
+                  // Trigger UI refresh
+                  setState(() {});
+                },
+              ),
+            ),
+          ] else ...[
+            const Text(
+              'Currently in Guest Mode (Offline). Sign in to back up your debts and access them anywhere.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.login_rounded, size: 18),
+                label: const Text('Sync with Google Account'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () async {
+                  try {
+                    HapticService.selection();
+                    await supabaseService.signInWithGoogle();
+                    
+                    if (mounted) {
+                      // Trigger migration
+                      final repo = ref.read(obligationRepositoryProvider);
+                      await repo.syncAllLocalToCloud();
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Cloud sync activated! Data migrated.')),
+                      );
+                      setState(() {});
+                    }
+                  } catch (e) {
+                    _showError('Sync failed: $e');
+                  }
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

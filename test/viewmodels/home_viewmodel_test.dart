@@ -131,17 +131,17 @@ void main() {
       final debt = createObligation();
       final settings = UserSetting(
         id: 1,
-        monthlyIncome: 5000,
-        currency: '₹',
+        monthlyIncome: 10000.0,
+        currency: 'USD',
         notificationsEnabled: true,
-        reminderDaysBefore: 3,
+        reminderDaysBefore: 1,
         paydayOfMonth: 1,
         projectionMonths: 1,
         themeMode: 'system',
         isPremium: false,
-        paymentStreak: 5,
-        lastPaymentDate: DateTime.now().subtract(const Duration(days: 31)),
+        paymentStreak: 0,
         smsSyncEnabled: false,
+        isSavageMode: false,
       );
 
       settingsController.add(settings);

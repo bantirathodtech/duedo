@@ -7,9 +7,11 @@ import 'package:duedo/repositories/obligation_repository.dart';
 import 'package:duedo/services/vault_service.dart';
 import 'package:duedo/viewmodels/home_viewmodel.dart';
 import 'package:duedo/services/database.dart';
+import 'package:duedo/services/supabase_service.dart';
 
 class MockObligationRepository extends Mock implements ObligationRepository {}
 class MockVaultService extends Mock implements VaultService {}
+class MockSupabaseService extends Mock implements SupabaseService {}
 class MockHomeViewModel extends StateNotifier<HomeState> with Mock implements HomeViewModel {
   MockHomeViewModel() : super(HomeState(obligations: [], payments: []));
 }
@@ -17,29 +19,31 @@ class MockHomeViewModel extends StateNotifier<HomeState> with Mock implements Ho
 void main() {
   late MockObligationRepository mockRepository;
   late MockVaultService mockVaultService;
+  late MockSupabaseService mockSupabaseService;
 
   setUpAll(() {
-    registerFallbackValue(UserSettingsCompanion());
-    registerFallbackValue(ObligationsCompanion());
+    registerFallbackValue(const UserSettingsCompanion());
+    registerFallbackValue(const ObligationsCompanion());
   });
 
   setUp(() {
     mockRepository = MockObligationRepository();
     mockVaultService = MockVaultService();
+    mockSupabaseService = MockSupabaseService();
 
-    final settings = UserSetting(
+    const settings = UserSetting(
       id: 1,
-      monthlyIncome: 50000,
+      monthlyIncome: 50000.0,
       currency: 'INR',
       notificationsEnabled: true,
-      reminderDaysBefore: 3,
+      reminderDaysBefore: 1,
       paydayOfMonth: 1,
       projectionMonths: 1,
       themeMode: 'system',
-      isPremium: false,
+      isPremium: true,
       paymentStreak: 0,
       smsSyncEnabled: false,
-      lastPaymentDate: null,
+      isSavageMode: false,
     );
 
     when(() => mockRepository.getAllObligations()).thenAnswer((_) => Stream.value([]));
@@ -47,6 +51,9 @@ void main() {
     when(() => mockRepository.getSettings()).thenAnswer((_) => Stream.value(settings));
     when(() => mockVaultService.isVaultEnabled()).thenAnswer((_) => Future.value(false));
     when(() => mockRepository.updateSettings(any())).thenAnswer((_) => Future.value(null));
+    when(() => mockSupabaseService.initialize()).thenAnswer((_) => Future.value());
+    when(() => mockSupabaseService.currentUser).thenReturn(null);
+    when(() => mockSupabaseService.isAuthenticated).thenReturn(false);
   });
 
   Widget createTestWidget() {
@@ -54,6 +61,7 @@ void main() {
       overrides: [
         obligationRepositoryProvider.overrideWithValue(mockRepository),
         vaultServiceProvider.overrideWithValue(mockVaultService),
+        supabaseServiceProvider.overrideWithValue(mockSupabaseService),
       ],
       child: const MaterialApp(
         home: SettingsScreen(),

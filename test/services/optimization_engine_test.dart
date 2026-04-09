@@ -2,6 +2,7 @@
 ///
 /// Tests the Snowball vs Avalanche sorting strategies and
 /// the delta (interest saved / months saved) calculation.
+library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:duedo/services/optimization_engine.dart';
 import 'package:duedo/services/database.dart';

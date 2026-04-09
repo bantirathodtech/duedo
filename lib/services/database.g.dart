@@ -1736,6 +1736,32 @@ class $UserSettingsTable extends UserSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _lastOpenedMeta = const VerificationMeta(
+    'lastOpened',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastOpened = GeneratedColumn<DateTime>(
+    'last_opened',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isSavageModeMeta = const VerificationMeta(
+    'isSavageMode',
+  );
+  @override
+  late final GeneratedColumn<bool> isSavageMode = GeneratedColumn<bool>(
+    'is_savage_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_savage_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1750,6 +1776,8 @@ class $UserSettingsTable extends UserSettings
     paymentStreak,
     lastPaymentDate,
     smsSyncEnabled,
+    lastOpened,
+    isSavageMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1856,6 +1884,21 @@ class $UserSettingsTable extends UserSettings
         ),
       );
     }
+    if (data.containsKey('last_opened')) {
+      context.handle(
+        _lastOpenedMeta,
+        lastOpened.isAcceptableOrUnknown(data['last_opened']!, _lastOpenedMeta),
+      );
+    }
+    if (data.containsKey('is_savage_mode')) {
+      context.handle(
+        _isSavageModeMeta,
+        isSavageMode.isAcceptableOrUnknown(
+          data['is_savage_mode']!,
+          _isSavageModeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1913,6 +1956,14 @@ class $UserSettingsTable extends UserSettings
         DriftSqlType.bool,
         data['${effectivePrefix}sms_sync_enabled'],
       )!,
+      lastOpened: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_opened'],
+      ),
+      isSavageMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_savage_mode'],
+      )!,
     );
   }
 
@@ -1935,6 +1986,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
   final int paymentStreak;
   final DateTime? lastPaymentDate;
   final bool smsSyncEnabled;
+  final DateTime? lastOpened;
+  final bool isSavageMode;
   const UserSetting({
     required this.id,
     required this.monthlyIncome,
@@ -1948,6 +2001,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     required this.paymentStreak,
     this.lastPaymentDate,
     required this.smsSyncEnabled,
+    this.lastOpened,
+    required this.isSavageMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1966,6 +2021,10 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       map['last_payment_date'] = Variable<DateTime>(lastPaymentDate);
     }
     map['sms_sync_enabled'] = Variable<bool>(smsSyncEnabled);
+    if (!nullToAbsent || lastOpened != null) {
+      map['last_opened'] = Variable<DateTime>(lastOpened);
+    }
+    map['is_savage_mode'] = Variable<bool>(isSavageMode);
     return map;
   }
 
@@ -1985,6 +2044,10 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           ? const Value.absent()
           : Value(lastPaymentDate),
       smsSyncEnabled: Value(smsSyncEnabled),
+      lastOpened: lastOpened == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastOpened),
+      isSavageMode: Value(isSavageMode),
     );
   }
 
@@ -2008,6 +2071,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       paymentStreak: serializer.fromJson<int>(json['paymentStreak']),
       lastPaymentDate: serializer.fromJson<DateTime?>(json['lastPaymentDate']),
       smsSyncEnabled: serializer.fromJson<bool>(json['smsSyncEnabled']),
+      lastOpened: serializer.fromJson<DateTime?>(json['lastOpened']),
+      isSavageMode: serializer.fromJson<bool>(json['isSavageMode']),
     );
   }
   @override
@@ -2026,6 +2091,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       'paymentStreak': serializer.toJson<int>(paymentStreak),
       'lastPaymentDate': serializer.toJson<DateTime?>(lastPaymentDate),
       'smsSyncEnabled': serializer.toJson<bool>(smsSyncEnabled),
+      'lastOpened': serializer.toJson<DateTime?>(lastOpened),
+      'isSavageMode': serializer.toJson<bool>(isSavageMode),
     };
   }
 
@@ -2042,6 +2109,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     int? paymentStreak,
     Value<DateTime?> lastPaymentDate = const Value.absent(),
     bool? smsSyncEnabled,
+    Value<DateTime?> lastOpened = const Value.absent(),
+    bool? isSavageMode,
   }) => UserSetting(
     id: id ?? this.id,
     monthlyIncome: monthlyIncome ?? this.monthlyIncome,
@@ -2057,6 +2126,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
         ? lastPaymentDate.value
         : this.lastPaymentDate,
     smsSyncEnabled: smsSyncEnabled ?? this.smsSyncEnabled,
+    lastOpened: lastOpened.present ? lastOpened.value : this.lastOpened,
+    isSavageMode: isSavageMode ?? this.isSavageMode,
   );
   UserSetting copyWithCompanion(UserSettingsCompanion data) {
     return UserSetting(
@@ -2088,6 +2159,12 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       smsSyncEnabled: data.smsSyncEnabled.present
           ? data.smsSyncEnabled.value
           : this.smsSyncEnabled,
+      lastOpened: data.lastOpened.present
+          ? data.lastOpened.value
+          : this.lastOpened,
+      isSavageMode: data.isSavageMode.present
+          ? data.isSavageMode.value
+          : this.isSavageMode,
     );
   }
 
@@ -2105,7 +2182,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           ..write('isPremium: $isPremium, ')
           ..write('paymentStreak: $paymentStreak, ')
           ..write('lastPaymentDate: $lastPaymentDate, ')
-          ..write('smsSyncEnabled: $smsSyncEnabled')
+          ..write('smsSyncEnabled: $smsSyncEnabled, ')
+          ..write('lastOpened: $lastOpened, ')
+          ..write('isSavageMode: $isSavageMode')
           ..write(')'))
         .toString();
   }
@@ -2124,6 +2203,8 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     paymentStreak,
     lastPaymentDate,
     smsSyncEnabled,
+    lastOpened,
+    isSavageMode,
   );
   @override
   bool operator ==(Object other) =>
@@ -2140,7 +2221,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           other.isPremium == this.isPremium &&
           other.paymentStreak == this.paymentStreak &&
           other.lastPaymentDate == this.lastPaymentDate &&
-          other.smsSyncEnabled == this.smsSyncEnabled);
+          other.smsSyncEnabled == this.smsSyncEnabled &&
+          other.lastOpened == this.lastOpened &&
+          other.isSavageMode == this.isSavageMode);
 }
 
 class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
@@ -2156,6 +2239,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   final Value<int> paymentStreak;
   final Value<DateTime?> lastPaymentDate;
   final Value<bool> smsSyncEnabled;
+  final Value<DateTime?> lastOpened;
+  final Value<bool> isSavageMode;
   const UserSettingsCompanion({
     this.id = const Value.absent(),
     this.monthlyIncome = const Value.absent(),
@@ -2169,6 +2254,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.paymentStreak = const Value.absent(),
     this.lastPaymentDate = const Value.absent(),
     this.smsSyncEnabled = const Value.absent(),
+    this.lastOpened = const Value.absent(),
+    this.isSavageMode = const Value.absent(),
   });
   UserSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -2183,6 +2270,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.paymentStreak = const Value.absent(),
     this.lastPaymentDate = const Value.absent(),
     this.smsSyncEnabled = const Value.absent(),
+    this.lastOpened = const Value.absent(),
+    this.isSavageMode = const Value.absent(),
   });
   static Insertable<UserSetting> custom({
     Expression<int>? id,
@@ -2197,6 +2286,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Expression<int>? paymentStreak,
     Expression<DateTime>? lastPaymentDate,
     Expression<bool>? smsSyncEnabled,
+    Expression<DateTime>? lastOpened,
+    Expression<bool>? isSavageMode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2213,6 +2304,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       if (paymentStreak != null) 'payment_streak': paymentStreak,
       if (lastPaymentDate != null) 'last_payment_date': lastPaymentDate,
       if (smsSyncEnabled != null) 'sms_sync_enabled': smsSyncEnabled,
+      if (lastOpened != null) 'last_opened': lastOpened,
+      if (isSavageMode != null) 'is_savage_mode': isSavageMode,
     });
   }
 
@@ -2229,6 +2322,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Value<int>? paymentStreak,
     Value<DateTime?>? lastPaymentDate,
     Value<bool>? smsSyncEnabled,
+    Value<DateTime?>? lastOpened,
+    Value<bool>? isSavageMode,
   }) {
     return UserSettingsCompanion(
       id: id ?? this.id,
@@ -2243,6 +2338,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       paymentStreak: paymentStreak ?? this.paymentStreak,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
       smsSyncEnabled: smsSyncEnabled ?? this.smsSyncEnabled,
+      lastOpened: lastOpened ?? this.lastOpened,
+      isSavageMode: isSavageMode ?? this.isSavageMode,
     );
   }
 
@@ -2285,6 +2382,12 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     if (smsSyncEnabled.present) {
       map['sms_sync_enabled'] = Variable<bool>(smsSyncEnabled.value);
     }
+    if (lastOpened.present) {
+      map['last_opened'] = Variable<DateTime>(lastOpened.value);
+    }
+    if (isSavageMode.present) {
+      map['is_savage_mode'] = Variable<bool>(isSavageMode.value);
+    }
     return map;
   }
 
@@ -2302,7 +2405,310 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
           ..write('isPremium: $isPremium, ')
           ..write('paymentStreak: $paymentStreak, ')
           ..write('lastPaymentDate: $lastPaymentDate, ')
-          ..write('smsSyncEnabled: $smsSyncEnabled')
+          ..write('smsSyncEnabled: $smsSyncEnabled, ')
+          ..write('lastOpened: $lastOpened, ')
+          ..write('isSavageMode: $isSavageMode')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $NotificationTemplatesTable extends NotificationTemplates
+    with TableInfo<$NotificationTemplatesTable, NotificationTemplate> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NotificationTemplatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _phraseMeta = const VerificationMeta('phrase');
+  @override
+  late final GeneratedColumn<String> phrase = GeneratedColumn<String>(
+    'phrase',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isSavageMeta = const VerificationMeta(
+    'isSavage',
+  );
+  @override
+  late final GeneratedColumn<bool> isSavage = GeneratedColumn<bool>(
+    'is_savage',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_savage" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, category, phrase, isSavage];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notification_templates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NotificationTemplate> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('phrase')) {
+      context.handle(
+        _phraseMeta,
+        phrase.isAcceptableOrUnknown(data['phrase']!, _phraseMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_phraseMeta);
+    }
+    if (data.containsKey('is_savage')) {
+      context.handle(
+        _isSavageMeta,
+        isSavage.isAcceptableOrUnknown(data['is_savage']!, _isSavageMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NotificationTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NotificationTemplate(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      phrase: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phrase'],
+      )!,
+      isSavage: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_savage'],
+      )!,
+    );
+  }
+
+  @override
+  $NotificationTemplatesTable createAlias(String alias) {
+    return $NotificationTemplatesTable(attachedDatabase, alias);
+  }
+}
+
+class NotificationTemplate extends DataClass
+    implements Insertable<NotificationTemplate> {
+  final int id;
+  final String category;
+  final String phrase;
+  final bool isSavage;
+  const NotificationTemplate({
+    required this.id,
+    required this.category,
+    required this.phrase,
+    required this.isSavage,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['category'] = Variable<String>(category);
+    map['phrase'] = Variable<String>(phrase);
+    map['is_savage'] = Variable<bool>(isSavage);
+    return map;
+  }
+
+  NotificationTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return NotificationTemplatesCompanion(
+      id: Value(id),
+      category: Value(category),
+      phrase: Value(phrase),
+      isSavage: Value(isSavage),
+    );
+  }
+
+  factory NotificationTemplate.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NotificationTemplate(
+      id: serializer.fromJson<int>(json['id']),
+      category: serializer.fromJson<String>(json['category']),
+      phrase: serializer.fromJson<String>(json['phrase']),
+      isSavage: serializer.fromJson<bool>(json['isSavage']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'category': serializer.toJson<String>(category),
+      'phrase': serializer.toJson<String>(phrase),
+      'isSavage': serializer.toJson<bool>(isSavage),
+    };
+  }
+
+  NotificationTemplate copyWith({
+    int? id,
+    String? category,
+    String? phrase,
+    bool? isSavage,
+  }) => NotificationTemplate(
+    id: id ?? this.id,
+    category: category ?? this.category,
+    phrase: phrase ?? this.phrase,
+    isSavage: isSavage ?? this.isSavage,
+  );
+  NotificationTemplate copyWithCompanion(NotificationTemplatesCompanion data) {
+    return NotificationTemplate(
+      id: data.id.present ? data.id.value : this.id,
+      category: data.category.present ? data.category.value : this.category,
+      phrase: data.phrase.present ? data.phrase.value : this.phrase,
+      isSavage: data.isSavage.present ? data.isSavage.value : this.isSavage,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationTemplate(')
+          ..write('id: $id, ')
+          ..write('category: $category, ')
+          ..write('phrase: $phrase, ')
+          ..write('isSavage: $isSavage')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, category, phrase, isSavage);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NotificationTemplate &&
+          other.id == this.id &&
+          other.category == this.category &&
+          other.phrase == this.phrase &&
+          other.isSavage == this.isSavage);
+}
+
+class NotificationTemplatesCompanion
+    extends UpdateCompanion<NotificationTemplate> {
+  final Value<int> id;
+  final Value<String> category;
+  final Value<String> phrase;
+  final Value<bool> isSavage;
+  const NotificationTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.category = const Value.absent(),
+    this.phrase = const Value.absent(),
+    this.isSavage = const Value.absent(),
+  });
+  NotificationTemplatesCompanion.insert({
+    this.id = const Value.absent(),
+    required String category,
+    required String phrase,
+    this.isSavage = const Value.absent(),
+  }) : category = Value(category),
+       phrase = Value(phrase);
+  static Insertable<NotificationTemplate> custom({
+    Expression<int>? id,
+    Expression<String>? category,
+    Expression<String>? phrase,
+    Expression<bool>? isSavage,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (category != null) 'category': category,
+      if (phrase != null) 'phrase': phrase,
+      if (isSavage != null) 'is_savage': isSavage,
+    });
+  }
+
+  NotificationTemplatesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? category,
+    Value<String>? phrase,
+    Value<bool>? isSavage,
+  }) {
+    return NotificationTemplatesCompanion(
+      id: id ?? this.id,
+      category: category ?? this.category,
+      phrase: phrase ?? this.phrase,
+      isSavage: isSavage ?? this.isSavage,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (phrase.present) {
+      map['phrase'] = Variable<String>(phrase.value);
+    }
+    if (isSavage.present) {
+      map['is_savage'] = Variable<bool>(isSavage.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('category: $category, ')
+          ..write('phrase: $phrase, ')
+          ..write('isSavage: $isSavage')
           ..write(')'))
         .toString();
   }
@@ -2314,6 +2720,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ObligationsTable obligations = $ObligationsTable(this);
   late final $PaymentsTable payments = $PaymentsTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
+  late final $NotificationTemplatesTable notificationTemplates =
+      $NotificationTemplatesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2322,6 +2730,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     obligations,
     payments,
     userSettings,
+    notificationTemplates,
   ];
 }
 
@@ -3299,6 +3708,8 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
       Value<int> paymentStreak,
       Value<DateTime?> lastPaymentDate,
       Value<bool> smsSyncEnabled,
+      Value<DateTime?> lastOpened,
+      Value<bool> isSavageMode,
     });
 typedef $$UserSettingsTableUpdateCompanionBuilder =
     UserSettingsCompanion Function({
@@ -3314,6 +3725,8 @@ typedef $$UserSettingsTableUpdateCompanionBuilder =
       Value<int> paymentStreak,
       Value<DateTime?> lastPaymentDate,
       Value<bool> smsSyncEnabled,
+      Value<DateTime?> lastOpened,
+      Value<bool> isSavageMode,
     });
 
 class $$UserSettingsTableFilterComposer
@@ -3382,6 +3795,16 @@ class $$UserSettingsTableFilterComposer
 
   ColumnFilters<bool> get smsSyncEnabled => $composableBuilder(
     column: $table.smsSyncEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastOpened => $composableBuilder(
+    column: $table.lastOpened,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSavageMode => $composableBuilder(
+    column: $table.isSavageMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3454,6 +3877,16 @@ class $$UserSettingsTableOrderingComposer
     column: $table.smsSyncEnabled,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get lastOpened => $composableBuilder(
+    column: $table.lastOpened,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSavageMode => $composableBuilder(
+    column: $table.isSavageMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserSettingsTableAnnotationComposer
@@ -3516,6 +3949,16 @@ class $$UserSettingsTableAnnotationComposer
     column: $table.smsSyncEnabled,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get lastOpened => $composableBuilder(
+    column: $table.lastOpened,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSavageMode => $composableBuilder(
+    column: $table.isSavageMode,
+    builder: (column) => column,
+  );
 }
 
 class $$UserSettingsTableTableManager
@@ -3561,6 +4004,8 @@ class $$UserSettingsTableTableManager
                 Value<int> paymentStreak = const Value.absent(),
                 Value<DateTime?> lastPaymentDate = const Value.absent(),
                 Value<bool> smsSyncEnabled = const Value.absent(),
+                Value<DateTime?> lastOpened = const Value.absent(),
+                Value<bool> isSavageMode = const Value.absent(),
               }) => UserSettingsCompanion(
                 id: id,
                 monthlyIncome: monthlyIncome,
@@ -3574,6 +4019,8 @@ class $$UserSettingsTableTableManager
                 paymentStreak: paymentStreak,
                 lastPaymentDate: lastPaymentDate,
                 smsSyncEnabled: smsSyncEnabled,
+                lastOpened: lastOpened,
+                isSavageMode: isSavageMode,
               ),
           createCompanionCallback:
               ({
@@ -3589,6 +4036,8 @@ class $$UserSettingsTableTableManager
                 Value<int> paymentStreak = const Value.absent(),
                 Value<DateTime?> lastPaymentDate = const Value.absent(),
                 Value<bool> smsSyncEnabled = const Value.absent(),
+                Value<DateTime?> lastOpened = const Value.absent(),
+                Value<bool> isSavageMode = const Value.absent(),
               }) => UserSettingsCompanion.insert(
                 id: id,
                 monthlyIncome: monthlyIncome,
@@ -3602,6 +4051,8 @@ class $$UserSettingsTableTableManager
                 paymentStreak: paymentStreak,
                 lastPaymentDate: lastPaymentDate,
                 smsSyncEnabled: smsSyncEnabled,
+                lastOpened: lastOpened,
+                isSavageMode: isSavageMode,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -3628,6 +4079,200 @@ typedef $$UserSettingsTableProcessedTableManager =
       UserSetting,
       PrefetchHooks Function()
     >;
+typedef $$NotificationTemplatesTableCreateCompanionBuilder =
+    NotificationTemplatesCompanion Function({
+      Value<int> id,
+      required String category,
+      required String phrase,
+      Value<bool> isSavage,
+    });
+typedef $$NotificationTemplatesTableUpdateCompanionBuilder =
+    NotificationTemplatesCompanion Function({
+      Value<int> id,
+      Value<String> category,
+      Value<String> phrase,
+      Value<bool> isSavage,
+    });
+
+class $$NotificationTemplatesTableFilterComposer
+    extends Composer<_$AppDatabase, $NotificationTemplatesTable> {
+  $$NotificationTemplatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phrase => $composableBuilder(
+    column: $table.phrase,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSavage => $composableBuilder(
+    column: $table.isSavage,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NotificationTemplatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $NotificationTemplatesTable> {
+  $$NotificationTemplatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phrase => $composableBuilder(
+    column: $table.phrase,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSavage => $composableBuilder(
+    column: $table.isSavage,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NotificationTemplatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NotificationTemplatesTable> {
+  $$NotificationTemplatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get phrase =>
+      $composableBuilder(column: $table.phrase, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSavage =>
+      $composableBuilder(column: $table.isSavage, builder: (column) => column);
+}
+
+class $$NotificationTemplatesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NotificationTemplatesTable,
+          NotificationTemplate,
+          $$NotificationTemplatesTableFilterComposer,
+          $$NotificationTemplatesTableOrderingComposer,
+          $$NotificationTemplatesTableAnnotationComposer,
+          $$NotificationTemplatesTableCreateCompanionBuilder,
+          $$NotificationTemplatesTableUpdateCompanionBuilder,
+          (
+            NotificationTemplate,
+            BaseReferences<
+              _$AppDatabase,
+              $NotificationTemplatesTable,
+              NotificationTemplate
+            >,
+          ),
+          NotificationTemplate,
+          PrefetchHooks Function()
+        > {
+  $$NotificationTemplatesTableTableManager(
+    _$AppDatabase db,
+    $NotificationTemplatesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NotificationTemplatesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$NotificationTemplatesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$NotificationTemplatesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> phrase = const Value.absent(),
+                Value<bool> isSavage = const Value.absent(),
+              }) => NotificationTemplatesCompanion(
+                id: id,
+                category: category,
+                phrase: phrase,
+                isSavage: isSavage,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String category,
+                required String phrase,
+                Value<bool> isSavage = const Value.absent(),
+              }) => NotificationTemplatesCompanion.insert(
+                id: id,
+                category: category,
+                phrase: phrase,
+                isSavage: isSavage,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NotificationTemplatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NotificationTemplatesTable,
+      NotificationTemplate,
+      $$NotificationTemplatesTableFilterComposer,
+      $$NotificationTemplatesTableOrderingComposer,
+      $$NotificationTemplatesTableAnnotationComposer,
+      $$NotificationTemplatesTableCreateCompanionBuilder,
+      $$NotificationTemplatesTableUpdateCompanionBuilder,
+      (
+        NotificationTemplate,
+        BaseReferences<
+          _$AppDatabase,
+          $NotificationTemplatesTable,
+          NotificationTemplate
+        >,
+      ),
+      NotificationTemplate,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3638,4 +4283,6 @@ class $AppDatabaseManager {
       $$PaymentsTableTableManager(_db, _db.payments);
   $$UserSettingsTableTableManager get userSettings =>
       $$UserSettingsTableTableManager(_db, _db.userSettings);
+  $$NotificationTemplatesTableTableManager get notificationTemplates =>
+      $$NotificationTemplatesTableTableManager(_db, _db.notificationTemplates);
 }

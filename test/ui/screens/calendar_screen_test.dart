@@ -16,7 +16,7 @@ void main() {
   setUp(() {
     mockRepository = MockObligationRepository();
 
-    final settings = UserSetting(
+    const settings = UserSetting(
       id: 1,
       monthlyIncome: 50000,
       currency: 'INR',
@@ -29,6 +29,7 @@ void main() {
       paymentStreak: 0,
       smsSyncEnabled: false,
       lastPaymentDate: null,
+      isSavageMode: false,
     );
 
     when(() => mockRepository.getAllObligations()).thenAnswer((_) => Stream.value([]));
@@ -66,7 +67,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       
       final now = DateTime.now();
-      final settings = UserSetting(
+      const settings = UserSetting(
         id: 1,
         monthlyIncome: 50000,
         currency: 'INR',
@@ -79,6 +80,7 @@ void main() {
         paymentStreak: 0,
         smsSyncEnabled: false,
         lastPaymentDate: null,
+        isSavageMode: false,
       );
       when(() => mockRepository.getSettings()).thenAnswer((_) => Stream.value(settings));
       

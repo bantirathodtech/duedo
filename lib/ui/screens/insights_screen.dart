@@ -10,11 +10,79 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../services/financial_logic_service.dart';
 import '../../services/haptic_service.dart';
 
-class InsightsScreen extends ConsumerWidget {
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../services/ad_service.dart';
+
+class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends ConsumerState<InsightsScreen> {
+  NativeAd? _nativeAd;
+  bool _nativeAdIsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // IRONMAN: Defer ad loading to after the first frame is painted
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadNativeAd();
+    });
+  }
+
+  void _loadNativeAd() {
+    if (!AdMobService.isHealthy) return;
+    
+    final adUnitId = AdMobService.nativeAdUnitId;
+    if (adUnitId == null) return;
+
+    _nativeAd = NativeAd(
+      adUnitId: adUnitId,
+      factoryId: 'adFactoryExample', // This is usually ignored if using templates
+      listener: NativeAdListener(
+        onAdLoaded: (ad) {
+          debugPrint('$NativeAd loaded.');
+          setState(() {
+            _nativeAdIsLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('$NativeAd failed to load: $error');
+          Future.microtask(() => ad.dispose());
+        },
+      ),
+      request: const AdRequest(),
+      // Using Native Templates (Requires google_mobile_ads 3.0.0+)
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.small,
+        mainBackgroundColor: Colors.transparent,
+        cornerRadius: 15.0,
+        callToActionTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          backgroundColor: AppTheme.primary,
+          style: NativeTemplateFontStyle.bold,
+          size: 14.0,
+        ),
+        primaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          style: NativeTemplateFontStyle.bold,
+          size: 14.0,
+        ),
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
     final insightsState = ref.watch(insightsViewModelProvider);
     final viewModel = ref.read(homeViewModelProvider.notifier);
@@ -46,6 +114,9 @@ class InsightsScreen extends ConsumerWidget {
                   _buildSectionHeader('Automator Strategy'),
                   const SizedBox(height: 16),
                   _buildStrategyPanel(insightsState, insightsViewModel, currencyFormat, context),
+                  const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                  _buildNativeAd(),
                   const SizedBox(height: 32),
                   
                   _buildSectionHeader('Simulation Sandbox'),
@@ -757,6 +828,120 @@ class InsightsScreen extends ConsumerWidget {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildNativeAd() {
+    if (_nativeAdIsLoaded && _nativeAd != null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration: AppTheme.glassDecoration(context).copyWith(
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'AD', 
+                      style: GoogleFonts.inter(
+                        fontSize: 8, 
+                        fontWeight: FontWeight.bold, 
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'SUPPORTING FREE ACCESS',
+                    style: GoogleFonts.inter(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white.withValues(alpha: 0.2),
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: 320,
+                minHeight: 90,
+                maxWidth: 400,
+                maxHeight: 200,
+              ),
+              child: AdWidget(ad: _nativeAd!),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return _buildNativeAdPlaceholder(context);
+  }
+
+  Widget _buildNativeAdPlaceholder(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: AppTheme.glassDecoration(context).copyWith(
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        gradient: LinearGradient(
+          colors: [AppTheme.primary.withValues(alpha: 0.15), AppTheme.secondary.withValues(alpha: 0.05)],
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
+                child: const Icon(Icons.star_rounded, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('AD: UNLOCK PRO INSIGHTS', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: AppTheme.primary)),
+                    const SizedBox(height: 4),
+                    Text('Get unlimited simulations and tax optimization.', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                 HapticService.selection();
+                 // Trigger IAP or move to settings
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Upgrade Now'),
+            ),
+          ),
+        ],
       ),
     );
   }

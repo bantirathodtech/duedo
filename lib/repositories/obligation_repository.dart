@@ -3,27 +3,70 @@ import 'package:flutter/foundation.dart';
 
 import 'package:drift/drift.dart';
 import '../services/database.dart';
+import '../services/audit_log.dart';
 import '../services/database_service.dart';
 import '../services/financial_logic_service.dart';
 import '../services/supabase_service.dart';
 import '../services/notification_service.dart';
 import '../models/app_enums.dart';
 
+final obligationRepositoryProvider = Provider((ref) {
+  final databaseService = ref.read(databaseServiceProvider);
+  final financialLogicService = ref.read(financialLogicServiceProvider);
+  final supabaseService = ref.read(supabaseServiceProvider);
+  final notificationService = ref.read(notificationServiceProvider);
+  return ObligationRepository(databaseService, financialLogicService, supabaseService, notificationService, ref);
+});
+
 class ObligationRepository {
   final DatabaseService _databaseService;
   final FinancialLogicService _financialLogicService;
   final SupabaseService _supabaseService;
   final NotificationService _notificationService;
+  final Ref _ref;
 
-  ObligationRepository(this._databaseService, this._financialLogicService, this._supabaseService, this._notificationService);
+  ObligationRepository(this._databaseService, this._financialLogicService, this._supabaseService, this._notificationService, this._ref);
 
   Future<void> init() async {
-    await _databaseService.init();
-    try {
-      await _supabaseService.signInAnonymously();
-    } catch (e) {
-      debugPrint('Supabase Auth skipped: $e');
+    AuditLog.startTimer('Repo_Init');
+    // Ensure anonymous auth is at least attempted to enable 'canSync' if allowed
+    final supabase = _ref.read(supabaseServiceProvider);
+    await supabase.initialize();
+    AuditLog.stopTimer('Repo_Init');
+  }
+
+  /// Bulk sync all local records to the cloud (used after Google Sign-In)
+  Future<void> syncAllLocalToCloud() async {
+    if (!_supabaseService.canSync) return;
+    
+    debugPrint('Hybrid Sync: Starting Guest -> Cloud migration...');
+    
+    // 1. Sync Settings
+    final settings = await _databaseService.getSettings();
+    if (settings != null) {
+      await updateSettings(settings.toCompanion(true));
     }
+
+    // 2. Sync Obligations
+    final obligations = await _databaseService.getAllObligations();
+    for (final obs in obligations) {
+      await _supabaseService.upsert('obligations', _obligationToMap(obs));
+      
+      // 3. Sync Payments for this obligation
+      final payments = await _databaseService.getPaymentsForObligation(obs.id);
+      for (final p in payments) {
+        await _supabaseService.upsert('payments', {
+          'id': p.id,
+          'obligation_id': p.obligationId,
+          'amount_paid': p.amountPaid,
+          'payment_type': p.paymentType,
+          'note': p.note,
+          'paid_date': p.paidDate.toIso8601String(),
+        });
+      }
+    }
+    
+    debugPrint('Hybrid Sync: Migration complete.');
   }
 
   Stream<List<Obligation>> getAllObligations() {
@@ -113,6 +156,10 @@ class ObligationRepository {
       );
 
       await updateObligation(updated);
+      
+      if (isFinished) {
+        await _notificationService.showEMIVictory(obligation.title);
+      }
     } else {
       // For One-time, check total paid
       final totalPaid = await _databaseService.getPaymentsSum(obligation.id);
@@ -186,7 +233,18 @@ class ObligationRepository {
     final dueDate = o.nextDueDate ?? o.startDate;
     final now = DateTime.now();
     
-    // Day of Notification
+    final settings = await getSettings().first;
+    final isSavage = settings?.isSavageMode ?? false;
+    
+    // Activate Zomato-style 5-3-2-1 Sequence
+    await _notificationService.scheduleStrategicSequence(
+      o.id,
+      o.title,
+      dueDate,
+      isSavage: isSavage,
+    );
+
+    // Exact Day Notification
     if (dueDate.isAfter(now)) {
       await _notificationService.scheduleDueDateNotification(
         id: o.id,
@@ -195,17 +253,11 @@ class ObligationRepository {
         scheduledDate: DateTime(dueDate.year, dueDate.month, dueDate.day, 9, 0),
       );
     }
+  }
 
-    // 1 Day Before Notification
-    final dayBefore = dueDate.subtract(const Duration(days: 1));
-    if (dayBefore.isAfter(now)) {
-      await _notificationService.scheduleDueDateNotification(
-        id: o.id + 10000, // Offset for secondary notification
-        title: 'Upcoming Payment: ${o.title}',
-        body: 'Your payment of ${o.amount} is due tomorrow. Ensure funds are ready!',
-        scheduledDate: DateTime(dayBefore.year, dayBefore.month, dayBefore.day, 9, 30),
-      );
-    }
+  Future<String?> getRandomNotificationPhrase(String category, bool isSavage) async {
+    final template = await _databaseService.getRandomNotificationTemplate(category, isSavage);
+    return template?.phrase;
   }
 
   DateTime _addOneMonth(DateTime date) {
@@ -223,9 +275,3 @@ class ObligationRepository {
     return DateTime(nextYear, nextMonth, nextDay, date.hour, date.minute);
   }
 }
-
-final obligationRepositoryProvider = Provider<ObligationRepository>((ref) {
-  final dbService = ref.watch(databaseServiceProvider);
-  final supabaseService = ref.watch(supabaseServiceProvider);
-  return ObligationRepository(dbService, FinancialLogicService(), supabaseService, NotificationService());
-});

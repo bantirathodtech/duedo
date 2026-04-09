@@ -1,5 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/app_enums.dart';
 import 'database.dart';
+
+final financialLogicServiceProvider = Provider((ref) => FinancialLogicService());
 
 enum InsightSeverity { info, warning, critical }
 
@@ -110,6 +113,12 @@ class FinancialLogicService {
   }
 
   FreedomData calculateFreedomData(List<Obligation> obligations, double monthlyIncome) {
+    // We move the actual logic to a static method so 'compute' can use it
+    return _calculateFreedomDataInternal(obligations, monthlyIncome);
+  }
+
+  /// Internal logic for background or synchronous execution
+  static FreedomData _calculateFreedomDataInternal(List<Obligation> obligations, double monthlyIncome) {
     final activeDebts = obligations.where((ob) => ob.isActive && ob.type != ObligationType.recurring).toList();
     if (activeDebts.isEmpty) return FreedomData(daysLeft: 0, totalRemainingBalance: 0, targetDate: DateTime.now());
     
@@ -120,45 +129,37 @@ class FinancialLogicService {
 
     double baseDisposable = monthlyIncome - recurringTotal;
     if (baseDisposable <= 0) {
-      // If income can't even cover recurring expenses, freedom is theoretically infinite/far
       return FreedomData(daysLeft: 3650, totalRemainingBalance: totalBalance, targetDate: DateTime.now().add(const Duration(days: 3650)));
     }
 
-    // --- Snowball Simulation (Month-by-Month) ---
     List<_DebtSim> simDebts = activeDebts.map((d) => _DebtSim(
       balance: d.totalBalance,
       minPayment: d.type == ObligationType.emi ? d.amount : 0, 
       priority: d.priority.index,
     )).toList();
 
-    // Sort by priority (higher index = higher priority) then by balance (smallest first for snowball)
     simDebts.sort((a, b) {
       if (a.priority != b.priority) return b.priority.compareTo(a.priority);
       return a.balance.compareTo(b.balance);
     });
 
     int monthCount = 0;
-    const maxMonths = 600; // 50 years safety cap
-
+    const maxMonths = 600; 
     final monthlyBalances = <double>[];
     final monthlyWealth = <double>[];
     monthlyBalances.add(simDebts.fold(0.0, (sum, d) => sum + d.balance));
     monthlyWealth.add(0.0);
 
     double investmentPool = 0;
-    const double annualReturn = 0.12; // 12% APR default for "Wealth Flip"
+    const double annualReturn = 0.12; 
     double monthlyRate = annualReturn / 12;
 
     while (monthCount < maxMonths) {
-      if (!simDebts.any((d) => d.balance > 0) && monthCount >= 60) {
-        // Stop after debt free + 5 years of wealth projection for visualization
-        break;
-      }
+      if (!simDebts.any((d) => d.balance > 0) && monthCount >= 60) break;
       
       monthCount++;
       double currentCapacity = baseDisposable;
       
-      // 1. First Pass: Pay all mandatory EMIs
       for (var debt in simDebts) {
         if (debt.balance <= 0) continue;
         double payment = debt.minPayment.clamp(0, debt.balance);
@@ -166,7 +167,6 @@ class FinancialLogicService {
         currentCapacity -= payment;
       }
 
-      // 2. Second Pass: Apply remaining capacity to the highest priority "Snowball" target
       if (currentCapacity > 0) {
         for (var debt in simDebts) {
           if (debt.balance <= 0) continue;
@@ -177,25 +177,17 @@ class FinancialLogicService {
         }
       }
 
-      // 3. Wealth Flip: If all debts are paid, invest the REMAINING capacity + current pool growth
-      if (!simDebts.any((d) => d.balance > 0)) {
-        investmentPool = (investmentPool * (1 + monthlyRate)) + currentCapacity;
-      } else {
-        // Even while paying debts, any leftover capacity (rare in snowball) grows
-        investmentPool = (investmentPool * (1 + monthlyRate)) + currentCapacity;
-      }
-
+      investmentPool = (investmentPool * (1 + monthlyRate)) + currentCapacity;
       monthlyBalances.add(simDebts.fold(0.0, (sum, d) => sum + d.balance));
       monthlyWealth.add(investmentPool);
 
-      if (simDebts.every((d) => d.balance <= 0) && monthCount > 120) break; // Cap at 10 years for chart
+      if (simDebts.every((d) => d.balance <= 0) && monthCount > 120) break; 
     }
 
-    final targetDate = DateTime.now().add(Duration(days: monthCount * 30));
     return FreedomData(
-      daysLeft: monthCount * 30, // Note: This should ideally only count debt-free months
+      daysLeft: monthCount * 30,
       totalRemainingBalance: totalBalance,
-      targetDate: targetDate,
+      targetDate: DateTime.now().add(Duration(days: monthCount * 30)),
       monthlyBalances: monthlyBalances,
       monthlyWealth: monthlyWealth,
     );

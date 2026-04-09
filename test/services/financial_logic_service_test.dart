@@ -111,7 +111,7 @@ void main() {
     });
 
     test('should generate warning for high pressure before payday', () {
-      final payday = 30;
+      const payday = 30;
       final soonDate = DateTime(DateTime.now().year, DateTime.now().month, 25);
       final obligation = createObligation(amount: 2000, nextDueDate: soonDate);
       

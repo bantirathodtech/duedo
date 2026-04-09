@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:telephony/telephony.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/obligation_repository.dart';
+import 'notification_service.dart';
 import 'dart:developer' as dev;
 
 class SmsSyncService {
@@ -18,7 +19,7 @@ class SmsSyncService {
     if (permissionsGranted != null && permissionsGranted) {
       _telephony.listenIncomingSms(
         onNewMessage: _handleSms,
-        listenInBackground: true,
+        listenInBackground: false,
       );
     }
   }
@@ -62,8 +63,14 @@ class SmsSyncService {
       // Simple string matching for now (Fuzzy matching can be added later)
       // Check if title or category exists in SMS body
       if (body.contains(ob.title.toLowerCase())) {
-        dev.log('Duedo SMS match found: Updating ${ob.title} with $amount');
         await repo.markAsPaid(ob, amount, note: 'Auto-synced via SMS from $sender');
+        
+        // Witty Confirmation
+        _ref.read(notificationServiceProvider).showInstantAlert(
+          id: 5555,
+          title: "Got It! ⚡",
+          body: "We just spotted your ${ob.title} payment. Synchronized like a pro! 🎯",
+        );
         return;
       }
     }

@@ -9,6 +9,8 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../services/ad_service.dart';
 
 class AddObligationScreen extends ConsumerStatefulWidget {
   final Obligation? obligation;
@@ -20,6 +22,8 @@ class AddObligationScreen extends ConsumerStatefulWidget {
 
 class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
   final _formKey = GlobalKey<FormState>();
+  InterstitialAd? _interstitialAd;
+  bool _isAdLoaded = false;
   
   // Form Fields
   late String _title;
@@ -53,6 +57,32 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
     // If date is far future or same as created but intended as no-date
     // For now, we'll just track the toggle state. 
     // If it's a one-time with no specific deadline, users can toggle this.
+    // For now, we'll just track the toggle state. 
+    // If it's a one-time with no specific deadline, users can toggle this.
+    _loadInterstitialAd();
+  }
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdMobService.interstitialAdUnitId ?? '',
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _isAdLoaded = true;
+        },
+        onAdFailedToLoad: (error) {
+          debugPrint('InterstitialAd failed to load: $error');
+          _isAdLoaded = false;
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
   }
 
   static const List<String> _categories = [
@@ -435,7 +465,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
   Widget _buildCategoryDropdown() {
     return DropdownButtonFormField<String>(
       isExpanded: true,
-      value: _categories.contains(_category) ? _category : 'General',
+      initialValue: _categories.contains(_category) ? _category : 'General',
       decoration: InputDecoration(
         labelText: 'Category',
         prefixIcon: const Icon(Icons.category),
@@ -451,7 +481,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
   Widget _buildPriorityDropdown() {
     return DropdownButtonFormField<PriorityLevel>(
       isExpanded: true,
-      value: _priority,
+      initialValue: _priority,
       decoration: InputDecoration(
         labelText: 'Priority',
         prefixIcon: const Icon(Icons.low_priority),
@@ -536,7 +566,23 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
         await ref.read(obligationRepositoryProvider).updateObligation(updated);
       }
       
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        if (_isAdLoaded && _interstitialAd != null) {
+          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              Navigator.pop(context);
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              Navigator.pop(context);
+            },
+          );
+          _interstitialAd!.show();
+        } else {
+          Navigator.pop(context);
+        }
+      }
     }
   }
 

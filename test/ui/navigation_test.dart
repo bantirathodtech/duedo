@@ -11,38 +11,45 @@ import 'package:duedo/repositories/obligation_repository.dart';
 import 'package:duedo/services/milestone_service.dart';
 import 'package:duedo/services/notification_service.dart';
 import 'package:duedo/services/database.dart';
+import 'package:duedo/services/supabase_service.dart';
 
 class MockObligationRepository extends Mock implements ObligationRepository {}
 class MockMilestoneService extends Mock implements MilestoneService {}
 class MockNotificationService extends Mock implements NotificationService {}
+class MockSupabaseService extends Mock implements SupabaseService {}
+class ObligationFake extends Fake implements Obligation {}
 
 void main() {
   late MockObligationRepository mockRepository;
   late MockMilestoneService mockMilestoneService;
   late MockNotificationService mockNotificationService;
+  late MockSupabaseService mockSupabaseService;
 
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
+    registerFallbackValue(ObligationFake());
+    registerFallbackValue(MilestoneType.debtDestroyer);
   });
 
   setUp(() {
     mockRepository = MockObligationRepository();
     mockMilestoneService = MockMilestoneService();
     mockNotificationService = MockNotificationService();
+    mockSupabaseService = MockSupabaseService();
 
-    final settings = UserSetting(
+    const settings = UserSetting(
       id: 1,
-      monthlyIncome: 50000,
+      monthlyIncome: 50000.0,
       currency: 'INR',
       notificationsEnabled: true,
-      reminderDaysBefore: 3,
+      reminderDaysBefore: 1,
       paydayOfMonth: 1,
       projectionMonths: 1,
       themeMode: 'system',
-      isPremium: true, // Bypass AdGate
+      isPremium: true,
       paymentStreak: 0,
       smsSyncEnabled: false,
-      lastPaymentDate: null,
+      isSavageMode: false,
     );
 
     when(() => mockRepository.getAllObligations()).thenAnswer((_) => Stream.value([]));
@@ -56,6 +63,8 @@ void main() {
       title: any(named: 'title'),
       body: any(named: 'body'),
     )).thenAnswer((_) => Future.value());
+    
+    when(() => mockSupabaseService.initialize()).thenAnswer((_) => Future.value());
   });
 
   Widget createTestWidget() {
@@ -64,6 +73,7 @@ void main() {
         obligationRepositoryProvider.overrideWithValue(mockRepository),
         milestoneServiceProvider.overrideWithValue(mockMilestoneService),
         notificationServiceProvider.overrideWithValue(mockNotificationService),
+        supabaseServiceProvider.overrideWithValue(mockSupabaseService),
       ],
       child: const MaterialApp(
         home: MainScreen(),
@@ -72,7 +82,7 @@ void main() {
   }
 
   group('Navigation Stability Tests', () {
-    testWidgets('should switch between tabs correctly', skip: true, (tester) async {
+    testWidgets('should switch between tabs correctly', (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -80,9 +90,8 @@ void main() {
 
       await tester.pumpWidget(createTestWidget());
       
-      // Use manual pump loops instead of pumpAndSettle
-      // (HomeScreen has infinite TweenAnimationBuilder animations)
-      for (int i = 0; i < 10; i++) {
+      // Get past the staggered AppInitializer phases and deferred service timers (Ironman startup)
+      for (int i = 0; i < 200; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       
@@ -92,7 +101,7 @@ void main() {
 
       final scheduleBtn = find.text('Schedule', skipOffstage: false);
       if(scheduleBtn.evaluate().isNotEmpty) await tester.tap(scheduleBtn);
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       while(tester.takeException() != null) {}
@@ -100,22 +109,23 @@ void main() {
 
       final overviewBtn = find.text('Overview', skipOffstage: false);
       if(overviewBtn.evaluate().isNotEmpty) await tester.tap(overviewBtn);
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       while(tester.takeException() != null) {}
       expect(find.byType(HomeScreen, skipOffstage: false), findsOneWidget);
     });
 
-    testWidgets('should navigate to Add Obligation and back', skip: true, (tester) async {
+    testWidgets('should navigate to Add Obligation and back', (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(createTestWidget());
-      // Use manual pump loops to avoid pumpAndSettle timeout
-      for (int i = 0; i < 10; i++) {
+      
+      // Get past the staggered AppInitializer phases and deferred service timers (Ironman startup)
+      for (int i = 0; i < 200; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
 
@@ -124,7 +134,7 @@ void main() {
       final addNewFinder = find.text('ADD NEW', skipOffstage: false);
       if (addNewFinder.evaluate().isNotEmpty) {
         await tester.tap(addNewFinder);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
           await tester.pump(const Duration(milliseconds: 100));
         }
         while(tester.takeException() != null) {}
@@ -141,7 +151,7 @@ void main() {
           }
         }
         
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
           await tester.pump(const Duration(milliseconds: 100));
         }
         while(tester.takeException() != null) {}

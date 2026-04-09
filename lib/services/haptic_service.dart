@@ -1,35 +1,50 @@
-import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 
 class HapticService {
-  static void selection() {
-    HapticFeedback.selectionClick();
+  /// A light, celebratory double-tap for clearing EMIs or hitting milestones.
+  static Future<void> victoryPop() async {
+    if (await Vibration.hasVibrator()) {
+      if (await Vibration.hasAmplitudeControl()) {
+        await Vibration.vibrate(duration: 10, amplitude: 128);
+        await Future.delayed(const Duration(milliseconds: 50));
+        await Vibration.vibrate(duration: 15, amplitude: 200);
+      } else {
+        await Vibration.vibrate(duration: 50);
+      }
+    }
   }
 
-  static void light() {
-    HapticFeedback.lightImpact();
+  /// A heavy, sharp thud for "Savage" or high-priority alerts.
+  static Future<void> savageThud() async {
+    if (await Vibration.hasVibrator()) {
+      if (await Vibration.hasAmplitudeControl()) {
+        await Vibration.vibrate(duration: 80, amplitude: 255);
+      } else {
+        await Vibration.vibrate(duration: 150);
+      }
+    }
   }
 
-  static void medium() {
-    HapticFeedback.mediumImpact();
+  /// A very subtle click for minor UI interactions.
+  static Future<void> subtleClick() async {
+    if (await Vibration.hasVibrator()) {
+      await Vibration.vibrate(duration: 5, amplitude: 60);
+    }
   }
 
-  static void heavy() {
-    HapticFeedback.heavyImpact();
+  /// A pulsating warning wave for 1-day reminders or critical dues.
+  static Future<void> warningWave() async {
+    if (await Vibration.hasVibrator()) {
+      await Vibration.vibrate(pattern: [0, 50, 20, 100, 20, 150]);
+    }
   }
 
-  static void success() {
-    HapticFeedback.vibrate(); // Basic for now, but used for success animations
-  }
-
-  static void error() {
-    // Custom error pattern: 3 quick heavy impacts
-    Future.delayed(Duration.zero, () => HapticFeedback.heavyImpact());
-    Future.delayed(const Duration(milliseconds: 100), () => HapticFeedback.heavyImpact());
-    Future.delayed(const Duration(milliseconds: 200), () => HapticFeedback.heavyImpact());
-  }
-
-  static void warning() {
-    HapticFeedback.mediumImpact();
-    Future.delayed(const Duration(milliseconds: 150), () => HapticFeedback.mediumImpact());
-  }
+  // Legacy compatibility wrappers
+  static void selection() => subtleClick();
+  static void light() => subtleClick();
+  static void medium() => Vibration.vibrate(duration: 50);
+  static void heavy() => savageThud();
+  static void success() => victoryPop();
+  static void error() => warningWave();
+  static void warning() => subtleClick(); // Compatibility
 }

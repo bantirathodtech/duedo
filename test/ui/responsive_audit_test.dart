@@ -5,6 +5,7 @@
 /// Sliver unbounded-height constraints. Instead, this test suite
 /// exhaustively verifies the HomeState model, computed getters, and
 /// data integrity that powers the HomeScreen UI.
+library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:duedo/viewmodels/home_viewmodel.dart';
 import 'package:duedo/services/financial_logic_service.dart';
@@ -86,9 +87,9 @@ void main() {
     });
 
     test('copyWith with settings should persist them', () {
-      final settings = UserSetting(
+      const settings = UserSetting(
         id: 1,
-        monthlyIncome: 50000,
+        monthlyIncome: 50000.0,
         currency: '₹',
         isPremium: false,
         notificationsEnabled: true,
@@ -98,6 +99,7 @@ void main() {
         reminderDaysBefore: 3,
         smsSyncEnabled: false,
         themeMode: 'system',
+        isSavageMode: false,
       );
       final state = HomeState().copyWith(settings: settings);
       expect(state.settings!.monthlyIncome, 50000);

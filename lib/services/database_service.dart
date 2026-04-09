@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import 'database.dart';
+import '../models/app_enums.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -16,6 +17,10 @@ class DatabaseService {
   // Obligations
   Stream<List<Obligation>> watchAllObligations() {
     return (_db.select(_db.obligations)..orderBy([(t) => OrderingTerm(expression: t.priority, mode: OrderingMode.asc)])).watch();
+  }
+
+  Future<List<Obligation>> getAllObligations() {
+    return (_db.select(_db.obligations)..orderBy([(t) => OrderingTerm(expression: t.priority, mode: OrderingMode.asc)])).get();
   }
 
   Future<int> addObligation(ObligationsCompanion obligation) {
@@ -34,6 +39,12 @@ class DatabaseService {
     return (_db.delete(_db.obligations)..where((t) => t.id.equals(id))).go();
   }
 
+  Future<void> markObligationAsPaid(int id) async {
+    await (_db.update(_db.obligations)..where((t) => t.id.equals(id))).write(
+      const ObligationsCompanion(status: Value(ObligationStatus.paid)),
+    );
+  }
+
   // Payments
   Future<int> addPayment(PaymentsCompanion payment) {
     return _db.into(_db.payments).insert(payment);
@@ -41,6 +52,10 @@ class DatabaseService {
 
   Stream<List<Payment>> watchPaymentsForObligation(int obligationId) {
     return (_db.select(_db.payments)..where((t) => t.obligationId.equals(obligationId))).watch();
+  }
+
+  Future<List<Payment>> getPaymentsForObligation(int obligationId) {
+    return (_db.select(_db.payments)..where((t) => t.obligationId.equals(obligationId))).get();
   }
 
   Stream<List<Payment>> watchAllPayments() {
@@ -66,6 +81,14 @@ class DatabaseService {
 
   Future<UserSetting?> getSettings() {
     return (_db.select(_db.userSettings)..where((t) => t.id.equals(1))).getSingleOrNull();
+  }
+
+  Future<NotificationTemplate?> getRandomNotificationTemplate(String category, bool isSavage) async {
+    final query = _db.select(_db.notificationTemplates)
+      ..where((t) => t.category.equals(category) & t.isSavage.equals(isSavage));
+    final results = await query.get();
+    if (results.isEmpty) return null;
+    return (results..shuffle()).first;
   }
 
   Future<void> init() async {

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../services/ad_service.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../services/database.dart';
 import '../../models/app_enums.dart';
@@ -13,6 +15,7 @@ import '../widgets/snowball_curve_chart.dart';
 import 'milestones_screen.dart';
 import 'add_obligation_screen.dart';
 import 'settings_screen.dart';
+import '../../services/interstitial_ad_manager.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +27,49 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
   bool _showSuccessAnimation = false;
   int _selectedTab = 0; // 0: Debts/Goals, 1: Monthly Essentials
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+  late InterstitialAdManager _interstitialAdManager;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadBannerAd();
+    });
+    _interstitialAdManager = InterstitialAdManager()..loadAd();
+  }
+
+  Future<void> _loadBannerAd() async {
+    if (!AdMobService.isHealthy) return;
+
+    final adSize = await AdMobService.getAdaptiveAdSize(context);
+    
+    if (!mounted) return;
+    _bannerAd = BannerAd(
+      adUnitId: AdMobService.bannerAdUnitId!,
+      size: adSize,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _isBannerAdLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          print('BannerAd failed to load: $error');
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    final banner = _bannerAd;
+    _bannerAd = null;
+    Future.microtask(() => banner?.dispose());
+    _interstitialAdManager.dispose();
+    super.dispose();
+  }
 
   void _triggerSuccess() {
     setState(() => _showSuccessAnimation = true);
@@ -129,6 +175,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                               },
                             ),
                       ),
+                      
+                      if (_isBannerAdLoaded && !state.settings!.isPremium)
+                        SliverToBoxAdapter(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                            decoration: AppTheme.glassDecoration(context).copyWith(
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          'AD', 
+                                          style: GoogleFonts.inter(
+                                            fontSize: 8, 
+                                            fontWeight: FontWeight.bold, 
+                                            color: Colors.white.withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'SUPPORTING FREE ACCESS',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  alignment: Alignment.center,
+                                  width: _bannerAd!.size.width.toDouble(),
+                                  height: _bannerAd!.size.height.toDouble(),
+                                  child: AdWidget(ad: _bannerAd!),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       
                       const SliverToBoxAdapter(child: SizedBox(height: 120)),
                     ],
@@ -357,6 +457,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
 
   Widget _buildMainStatCard(String title, String value, LinearGradient gradient, bool isDark, IconData icon) {
     return Container(
+      height: 160,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -668,6 +769,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           onDismissed: (direction) {
             _triggerSuccess();
             ref.read(homeViewModelProvider.notifier).recordPayment(obligation, obligation.amount);
+            
+            // Show interstitial ad after payment for non-premium users
+            if (!ref.read(homeViewModelProvider).settings!.isPremium) {
+              _interstitialAdManager.showAd();
+            }
           },
           child: Container(
             decoration: AppTheme.glassDecoration(context),

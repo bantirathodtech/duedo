@@ -32,6 +32,7 @@ import '../widgets/voice_slay_modal.dart';
 import '../widgets/crisis_defibrillator_modal.dart';
 import '../../services/black_swan_crisis_service.dart';
 import '../widgets/sovereign_command_deck.dart';
+import '../widgets/sovereign_codex_modal.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -346,6 +347,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                BouncingWidget(
+                  onTap: () => SovereignCodexModal.show(context, isDark: isDark),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF1E1B4B), const Color(0xFF0F172A)]
+                            : [const Color(0xFFEEF2FF), const Color(0xFFF1F5F9)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('📜', style: TextStyle(fontSize: 10)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '9 PHASES',
+                          style: GoogleFonts.inter(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF818CF8),
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),

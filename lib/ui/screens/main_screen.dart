@@ -8,6 +8,7 @@ import 'insights_screen.dart';
 import 'calendar_screen.dart';
 import 'profile_screen.dart';
 import '../../services/haptic_service.dart';
+import '../widgets/sovereign_command_deck.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -201,9 +202,8 @@ class _DockItem extends StatelessWidget {
     const activeColor = AppTheme.primary;
     final inactiveColor = isDark ? const Color(0xFF6B7280) : const Color(0xFF94A3B8);
 
-    return GestureDetector(
+    return BouncingWidget(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -211,10 +211,10 @@ class _DockItem extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
               color: isSelected 
-                  ? activeColor.withValues(alpha: isDark ? 0.12 : 0.08) 
+                  ? activeColor.withValues(alpha: isDark ? 0.15 : 0.10) 
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
             ),

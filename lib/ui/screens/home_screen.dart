@@ -27,27 +27,10 @@ import '../widgets/payday_blitz_modal.dart';
 import '../../services/freedom_league_service.dart';
 import 'freedom_league_screen.dart';
 import '../../services/streak_armor_service.dart';
-import '../../services/slain_debt_trophy_service.dart';
 import '../widgets/relapse_rescue_modal.dart';
-import 'hall_of_slain_debts_screen.dart';
-import 'freedom_time_machine_screen.dart';
-import '../widgets/document_scanner_modal.dart';
-import '../widgets/vampire_slasher_modal.dart';
-import '../widgets/windfall_fortress_modal.dart';
 import '../widgets/voice_slay_modal.dart';
-import '../widgets/leech_audit_modal.dart';
-import '../widgets/syndicate_hub_modal.dart';
 import '../widgets/crisis_defibrillator_modal.dart';
-import '../widgets/wealth_flywheel_modal.dart';
 import '../../services/black_swan_crisis_service.dart';
-import '../widgets/bureau_strike_modal.dart';
-import '../widgets/freedom_wrapped_modal.dart';
-import '../widgets/banker_combat_modal.dart';
-import '../widgets/sovereign_vault_modal.dart';
-import '../widgets/informal_iou_modal.dart';
-import '../widgets/quantum_simulator_modal.dart';
-import '../widgets/midnight_brake_modal.dart';
-import '../widgets/junior_heritage_modal.dart';
 import '../widgets/sovereign_command_deck.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -375,75 +358,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildStreakArmorPill(isDark),
                 const SizedBox(width: 8),
                 _buildPaydayBlitzPill(viewModel, state, isDark),
-                const SizedBox(width: 8),
-                _buildHallOfTrophiesBadge(isDark),
-                const SizedBox(width: 8),
-                _buildTimeMachineBadge(isDark),
-                const SizedBox(width: 8),
-                _buildScannerBadge(isDark),
-                const SizedBox(width: 8),
-                _buildVampireBadge(isDark),
-                const SizedBox(width: 8),
-                _buildWindfallBadge(isDark),
-                const SizedBox(width: 8),
-                _buildLeechHunterBadge(isDark),
-                const SizedBox(width: 8),
-                _buildSyndicateBadge(isDark),
-                const SizedBox(width: 8),
-                _buildCrisisBadge(isDark),
-                const SizedBox(width: 8),
-                _buildWealthBadge(isDark),
-                const SizedBox(width: 8),
-                _buildBureauStrikeBadge(isDark),
-                const SizedBox(width: 8),
-                _buildFreedomWrappedBadge(isDark),
-                const SizedBox(width: 8),
-                _buildBankerCombatBadge(isDark),
-                const SizedBox(width: 8),
-                _buildSovereignVaultBadge(isDark),
-                const SizedBox(width: 8),
-                _buildIouMeshBadge(isDark),
-                const SizedBox(width: 8),
-                _buildMultiverseBadge(isDark),
-                const SizedBox(width: 8),
-                _buildMidnightBrakeBadge(isDark),
-                const SizedBox(width: 8),
-                _buildJuniorTrustBadge(isDark),
               ],
             ),
           ),
         ),
         const SizedBox(width: 8),
 
-        // Voice Slay Action
-        GestureDetector(
+        // Voice Slay Action with Pulsing Gradient & Spring Physics
+        BouncingWidget(
           onTap: () {
-            HapticService.selection();
             VoiceSlayModal.show(context, isDark: isDark);
           },
           child: Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.2 : 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.4),
-                width: 0.5,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.mic_rounded,
               size: 18,
-              color: Color(0xFF818CF8),
+              color: Colors.white,
             ),
           ),
         ),
         const SizedBox(width: 8),
 
-        // Settings Shortcut
-        GestureDetector(
+        // Settings Shortcut with Spring Physics & Frosted Styling
+        BouncingWidget(
           onTap: () {
-            HapticService.selection();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -452,8 +406,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           child: Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF141722) : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
+              color: isDark ? const Color(0xFF141724) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
                 width: 0.5,
@@ -2121,342 +2075,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildHallOfTrophiesBadge(bool isDark) {
-    final trophies = ref.watch(slainDebtTrophyProvider);
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const HallOfSlainDebtsScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🏆', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              '${trophies.length} SLAIN',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFF59E0B),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimeMachineBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const FreedomTimeMachineScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF10B981).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('⏳', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'TIME MACHINE',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF10B981),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScannerBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        DocumentScannerModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('📄', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'SCAN DOC',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF6366F1),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVampireBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        VampireSlasherModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE11D48).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFE11D48).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🧛', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'VAMPIRES',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFE11D48),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWindfallBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        WindfallFortressModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAB308).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFEAB308).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('💰', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'WINDFALL',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFCA8A04),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLeechHunterBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        LeechAuditModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🔍', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'LEECH HUNTER',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFD97706),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSyndicateBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        SyndicateHubModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF8B5CF6).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🛡️', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'SYNDICATE',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF8B5CF6),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCrisisBadge(bool isDark) {
-    final crisis = ref.watch(blackSwanCrisisProvider);
-    final isActive = crisis.isCrisisActive;
-
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        CrisisDefibrillatorModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: (isActive ? const Color(0xFFEF4444) : const Color(0xFF06B6D4))
-              .withValues(alpha: isDark ? 0.20 : 0.10),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: (isActive ? const Color(0xFFEF4444) : const Color(0xFF06B6D4))
-                .withValues(alpha: 0.45),
-            width: isActive ? 1.0 : 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(isActive ? '🚨' : '⚡', style: const TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              isActive ? 'CRISIS ACTIVE' : 'CRISIS SHIELD',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: isActive ? const Color(0xFFEF4444) : const Color(0xFF06B6D4),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWealthBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        WealthFlywheelModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF10B981).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🚀', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'WEALTH FLYWHEEL',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF10B981),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildCrisisBanner(bool isDark) {
     final crisis = ref.watch(blackSwanCrisisProvider);
     if (!crisis.isCrisisActive) return const SizedBox();
@@ -2503,294 +2121,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               ),
             ),
             const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFEF4444)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBureauStrikeBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        BureauStrikeModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🎯', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'BUREAU CLOCK',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0284C7),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFreedomWrappedBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        FreedomWrappedModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEC4899).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFEC4899).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🎬', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'WRAPPED',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFEC4899),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBankerCombatBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        BankerCombatModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF43F5E).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFF43F5E).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🥊', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'BANKER COMBAT',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFF43F5E),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSovereignVaultBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        SovereignVaultModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAB308).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFEAB308).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🔐', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'SOVEREIGN VAULT',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFCA8A04),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIouMeshBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        InformalIouModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF10B981).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🤝', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'IOU MESH',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF059669),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMultiverseBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        QuantumSimulatorModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🔮', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'MULTIVERSE',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF4F46E5),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMidnightBrakeBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        MidnightBrakeModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF8B5CF6).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🌙', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'COGNITIVE BRAKE',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF7C3AED),
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildJuniorTrustBadge(bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        JuniorHeritageModal.show(context, isDark: isDark);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF14B8A6).withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFF14B8A6).withValues(alpha: 0.35),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('👑', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 4),
-            Text(
-              'JUNIOR TRUST',
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0D9488),
-                letterSpacing: 0.6,
-              ),
-            ),
           ],
         ),
       ),

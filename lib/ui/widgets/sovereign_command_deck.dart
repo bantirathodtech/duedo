@@ -177,7 +177,7 @@ class DynamicContextBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sovereign Tactical Hubs',
+                  'Specialized Financial Centers',
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -185,7 +185,7 @@ class DynamicContextBanner extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '4 Strategic Command Centers armed & synchronized',
+                  'Tools for debt defense, family coordination, future planning & security',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: isDark ? Colors.white60 : Colors.black54,
@@ -200,7 +200,7 @@ class DynamicContextBanner extends StatelessWidget {
   }
 }
 
-/// The 4-Hub Sovereign Command Deck (The Arsenal, The Alliance, The War-Room, The Vault).
+/// The 4-Hub Sovereign Command Deck (The Arsenal, The Alliance, Future Lab, The Vault).
 class SovereignCommandDeck extends StatelessWidget {
   final bool isDark;
 
@@ -219,9 +219,9 @@ class SovereignCommandDeck extends StatelessWidget {
               child: _buildHubCard(
                 context,
                 title: 'The Arsenal',
-                subtitle: 'Combat & Leaks',
+                subtitle: 'Stop Leaks & Fees',
                 emoji: '⚔️',
-                badgeText: '5 Weapons',
+                badgeText: '5 Tools',
                 gradientColors: isDark
                     ? [const Color(0xFF261019), const Color(0xFF160A13)]
                     : [const Color(0xFFFFF1F2), const Color(0xFFFFE4E6)],
@@ -234,9 +234,9 @@ class SovereignCommandDeck extends StatelessWidget {
               child: _buildHubCard(
                 context,
                 title: 'The Alliance',
-                subtitle: 'IOUs & Family',
+                subtitle: 'Family & Friend IOUs',
                 emoji: '🤝',
-                badgeText: '3 Networks',
+                badgeText: '3 Systems',
                 gradientColors: isDark
                     ? [const Color(0xFF0A231C), const Color(0xFF061813)]
                     : [const Color(0xFFECFDF5), const Color(0xFFD1FAE5)],
@@ -252,10 +252,10 @@ class SovereignCommandDeck extends StatelessWidget {
             Expanded(
               child: _buildHubCard(
                 context,
-                title: 'The War-Room',
-                subtitle: 'Multiverse & Horizon',
+                title: 'Future Lab',
+                subtitle: 'Timelines & Scenarios',
                 emoji: '🔮',
-                badgeText: '4 Engines',
+                badgeText: '4 Simulators',
                 gradientColors: isDark
                     ? [const Color(0xFF151936), const Color(0xFF0C0F22)]
                     : [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
@@ -268,9 +268,9 @@ class SovereignCommandDeck extends StatelessWidget {
               child: _buildHubCard(
                 context,
                 title: 'The Vault',
-                subtitle: 'Bunker & Reserves',
+                subtitle: 'Security & Emergency',
                 emoji: '🔐',
-                badgeText: '4 Shields',
+                badgeText: '4 Defenses',
                 gradientColors: isDark
                     ? [const Color(0xFF261E0E), const Color(0xFF171207)]
                     : [const Color(0xFFFEFCE8), const Color(0xFFFEF9C3)],
@@ -445,19 +445,19 @@ class SovereignCommandDeck extends StatelessWidget {
     );
   }
 
-  // --- 3. THE WAR-ROOM SHEET ---
+  // --- 3. THE FUTURE LAB SHEET ---
   void _showWarRoomSheet(BuildContext context) {
     _showCommandSheet(
       context,
-      title: 'The Strategic War-Room',
-      subtitle: 'Parallel multiverse simulations & freedom milestones',
+      title: 'The Future Planning Lab',
+      subtitle: 'Simulate your future, project debt-free timelines & see milestones',
       emoji: '🔮',
       accentColor: const Color(0xFF6366F1),
       tiles: [
         _SheetTileData(
           icon: '🔮',
-          title: 'Quantum Life Simulator',
-          subtitle: '3 parallel timelines (Alpha, Beta Mortgage, Gamma Blitz)',
+          title: 'Future Life Simulator',
+          subtitle: 'Compare 3 financial trajectories (Balanced, Home-Loan, or Debt-Sprint)',
           onTap: () => QuantumSimulatorModal.show(context, isDark: isDark),
         ),
         _SheetTileData(

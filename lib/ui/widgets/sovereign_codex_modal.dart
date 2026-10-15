@@ -53,8 +53,8 @@ class SovereignCodexModal extends StatelessWidget {
     return [
       PhaseFeatureInfo(
         phaseNumber: 1,
-        title: 'Tactical Payoff Engine',
-        subtitle: 'Mathematical Snowball & Avalanche',
+        title: 'Smart Debt-Payoff Engine',
+        subtitle: 'Snowball (Fast Wins) & Avalanche (Max Savings)',
         icon: '⚔️',
         accentColor: const Color(0xFF00D09C),
         humanBenefit: 'Eliminates debt paralysis by calculating the exact mathematical order that saves you the maximum interest.',
@@ -68,8 +68,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 2,
-        title: '1-Tap UPI Fast Slay',
-        subtitle: 'Frictionless Instant Debt Clearing',
+        title: '1-Tap UPI Quick-Pay',
+        subtitle: 'Instant Clearing via GPay, PhonePe or Cred',
         icon: '⚡',
         accentColor: const Color(0xFF38BDF8),
         humanBenefit: 'No logging into clumsy banking portals. Clear EMIs and micro-snowflakes directly via Google Pay, PhonePe, or Cred.',
@@ -83,8 +83,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 3,
-        title: 'Smart Sovereign Calendar',
-        subtitle: 'Zero-Deficit Obligation Forecast',
+        title: 'Cashflow & Due-Date Calendar',
+        subtitle: 'Visual Monthly Schedule & Deficit Forecast',
         icon: '📅',
         accentColor: const Color(0xFF818CF8),
         humanBenefit: 'Visualizes all upcoming EMIs, credit card cycles, and monthly essentials so surprise shortfalls never happen.',
@@ -98,8 +98,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 4,
-        title: 'Safe-to-Spend Runway Dial',
-        subtitle: 'Guilt-Free Daily Allowance',
+        title: 'Safe-to-Spend Daily Allowance',
+        subtitle: 'Exact Guilt-Free Spending Runway For Today',
         icon: '🛡️',
         accentColor: const Color(0xFF10B981),
         humanBenefit: 'Tells you exactly how much money you can spend today without touching your debt commitments or rent reserves.',
@@ -113,8 +113,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 5,
-        title: 'Streak Armor & Debt Cremation',
-        subtitle: 'Retention Psychology & Permanent Trophies',
+        title: 'Daily Streaks & Victory Trophies',
+        subtitle: 'Missed-Day Protection & Cremation Ceremonies',
         icon: '🔥',
         accentColor: const Color(0xFFF59E0B),
         humanBenefit: 'Never punishes an honest slip-up. Auto-deploys a Streak Shield and celebrates paid loans with a 60FPS particle cremation.',
@@ -132,8 +132,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 6,
-        title: 'Hyper-Automation & Windfall Fortress',
-        subtitle: 'Zero-Friction Intake & Leak Slasher',
+        title: 'Document Scanner & Sub Slasher',
+        subtitle: 'Camera Sanction Intake & 70/20/10 Bonus Splitting',
         icon: '📸',
         accentColor: const Color(0xFFEF4444),
         humanBenefit: 'Eliminates manual entry entirely. Snap a photo of a bank letter, slash streaming subscriptions, and partition bonuses.',
@@ -151,8 +151,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 7,
-        title: 'Ecosystem & Household Fortress',
-        subtitle: 'Anti-Predatory Defense & Couple Sync',
+        title: 'Couple Sync & Bank Fee Auditor',
+        subtitle: 'Private Partner Goals & RBI Charge Disputes',
         icon: '🔍',
         accentColor: const Color(0xFFF43F5E),
         humanBenefit: 'Detects illegal banking fees, lets couples sync finances without shame, and provides emergency breathing room during hardships.',
@@ -170,8 +170,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 8,
-        title: 'Cultural Mastery & Sovereign Power',
-        subtitle: 'CIBIL Arbitrage, Combat AI & Local Bunker',
+        title: 'Credit Score Radar & Collector Combat AI',
+        subtitle: 'CIBIL Optimization & Script Negotiation Practice',
         icon: '🎯',
         accentColor: const Color(0xFF0284C7),
         humanBenefit: 'Gives the borrower regulatory teeth. Boosts credit score before statement dates, roleplays settlement calls, and encrypts data locally.',
@@ -189,8 +189,8 @@ class SovereignCodexModal extends StatelessWidget {
       ),
       PhaseFeatureInfo(
         phaseNumber: 9,
-        title: 'Quantum Multiverse & Junior Trust',
-        subtitle: 'P2P Hand-Loans, Somatic Brake & Legacy',
+        title: 'Future Timelines, Impulse Brake & Family Legacy',
+        subtitle: 'Friend IOUs, 24h Cooling Chamber & Youth Wealth Trust',
         icon: '👑',
         accentColor: const Color(0xFF8B5CF6),
         humanBenefit: 'Tracks informal loans with dignity, stops late-night regret purchases with box-breathing, and trains kids in compounding wealth.',

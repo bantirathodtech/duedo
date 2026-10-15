@@ -137,7 +137,7 @@ class _SovereignVaultModalState extends ConsumerState<SovereignVaultModal> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'If pressured to unlock Duedo, entering the Panic PIN (${vault.decoyPin}) instantly loads a sanitized dummy savings journal with zero debt data exposed.',
+                          'If pressured to unlock Duedo, entering the Panic PIN (${vault.decoyPin}) instantly loads a sanitized decoy savings journal with zero debt data exposed.',
                           style: GoogleFonts.inter(fontSize: 12, height: 1.4, color: widget.isDark ? Colors.white70 : Colors.black87),
                         ),
                       ],

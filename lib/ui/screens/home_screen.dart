@@ -40,6 +40,10 @@ import '../widgets/syndicate_hub_modal.dart';
 import '../widgets/crisis_defibrillator_modal.dart';
 import '../widgets/wealth_flywheel_modal.dart';
 import '../../services/black_swan_crisis_service.dart';
+import '../widgets/bureau_strike_modal.dart';
+import '../widgets/freedom_wrapped_modal.dart';
+import '../widgets/banker_combat_modal.dart';
+import '../widgets/sovereign_vault_modal.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -382,6 +386,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildCrisisBadge(isDark),
                 const SizedBox(width: 8),
                 _buildWealthBadge(isDark),
+                const SizedBox(width: 8),
+                _buildBureauStrikeBadge(isDark),
+                const SizedBox(width: 8),
+                _buildFreedomWrappedBadge(isDark),
+                const SizedBox(width: 8),
+                _buildBankerCombatBadge(isDark),
+                const SizedBox(width: 8),
+                _buildSovereignVaultBadge(isDark),
               ],
             ),
           ),
@@ -2476,6 +2488,150 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               ),
             ),
             const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFEF4444)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBureauStrikeBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        BureauStrikeModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🎯', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'BUREAU CLOCK',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0284C7),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFreedomWrappedBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        FreedomWrappedModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEC4899).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFEC4899).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🎬', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'WRAPPED',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFEC4899),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankerCombatBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        BankerCombatModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF43F5E).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFF43F5E).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🥊', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'BANKER COMBAT',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFF43F5E),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSovereignVaultBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        SovereignVaultModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAB308).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFEAB308).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔐', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'SOVEREIGN VAULT',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFCA8A04),
+                letterSpacing: 0.6,
+              ),
+            ),
           ],
         ),
       ),

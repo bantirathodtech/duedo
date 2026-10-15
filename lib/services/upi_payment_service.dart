@@ -33,6 +33,17 @@ class UpiPaymentService {
     'onecard': 'onecard@icici',
   };
 
+  /// Resolves default biller VPA for a lender name
+  static String getVpaForLender(String lender) {
+    final lower = lender.toLowerCase();
+    for (final entry in defaultBillerVpas.entries) {
+      if (lower.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    return 'billpay@hdfcbank';
+  }
+
   /// Constructs an NPCI-compliant UPI URI
   static String buildUpiUri({
     required String vpa,

@@ -44,6 +44,10 @@ import '../widgets/bureau_strike_modal.dart';
 import '../widgets/freedom_wrapped_modal.dart';
 import '../widgets/banker_combat_modal.dart';
 import '../widgets/sovereign_vault_modal.dart';
+import '../widgets/informal_iou_modal.dart';
+import '../widgets/quantum_simulator_modal.dart';
+import '../widgets/midnight_brake_modal.dart';
+import '../widgets/junior_heritage_modal.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -394,6 +398,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildBankerCombatBadge(isDark),
                 const SizedBox(width: 8),
                 _buildSovereignVaultBadge(isDark),
+                const SizedBox(width: 8),
+                _buildIouMeshBadge(isDark),
+                const SizedBox(width: 8),
+                _buildMultiverseBadge(isDark),
+                const SizedBox(width: 8),
+                _buildMidnightBrakeBadge(isDark),
+                const SizedBox(width: 8),
+                _buildJuniorTrustBadge(isDark),
               ],
             ),
           ),
@@ -2629,6 +2641,150 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFFCA8A04),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIouMeshBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        InformalIouModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF10B981).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🤝', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'IOU MESH',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF059669),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMultiverseBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        QuantumSimulatorModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔮', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'MULTIVERSE',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF4F46E5),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMidnightBrakeBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        MidnightBrakeModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B5CF6).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🌙', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'COGNITIVE BRAKE',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF7C3AED),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJuniorTrustBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        JuniorHeritageModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF14B8A6).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF14B8A6).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('👑', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'JUNIOR TRUST',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0D9488),
                 letterSpacing: 0.6,
               ),
             ),

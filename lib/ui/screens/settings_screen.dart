@@ -1337,8 +1337,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildDemoDataSection() {
     return _buildSectionCard(
-      title: '9-Phase Production Demo Data',
-      description: 'Instantly seed realistic high-production dummy data across all 9 phases (Debts, Slain Trophies, Subscriptions, Household Syndicate, Impulse Vault, and Sovereign Vault) to verify production UI/UX.',
+      title: 'Demo Financial Sandbox',
+      description: 'Populate or reset realistic demo finances (Debts, Slain Trophies, Subscriptions, Household Syndicate, Impulse Vault) to explore all features.',
       child: Column(
         children: [
           ElevatedButton.icon(
@@ -1349,7 +1349,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('⚡ All 9 Phases Seeded with Production Demo Data!'),
+                    content: Text('⚡ Demo Financial Sandbox Loaded!'),
                     backgroundColor: Color(0xFF00D09C),
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -1359,7 +1359,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             icon: const Icon(Icons.bolt, color: Colors.black),
             label: Text(
-              'Reload 9-Phase Production Demo Data',
+              'Load Demo Financial Sandbox',
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black),
             ),
             style: ElevatedButton.styleFrom(

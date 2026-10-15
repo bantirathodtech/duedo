@@ -369,10 +369,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('📜', style: TextStyle(fontSize: 10)),
+                        const Text('🧭', style: TextStyle(fontSize: 10)),
                         const SizedBox(width: 4),
                         Text(
-                          '9 PHASES',
+                          'PLAYBOOK',
                           style: GoogleFonts.inter(
                             fontSize: 9,
                             fontWeight: FontWeight.w900,

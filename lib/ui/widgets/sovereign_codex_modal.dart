@@ -243,7 +243,7 @@ class SovereignCodexModal extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'The Sovereign Codex',
+                      'The Sovereign Playbook',
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -251,7 +251,7 @@ class SovereignCodexModal extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'All 9 Master Phases of Financial Sovereignty',
+                      '9 Pillars of Absolute Financial Freedom',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         color: const Color(0xFF6366F1),
@@ -290,7 +290,7 @@ class SovereignCodexModal extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Empire Mastery: 9 of 9 Phases Active',
+                            'System Readiness: All 9 Pillars Active',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -384,7 +384,7 @@ class SovereignCodexModal extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          'PHASE ${phase.phaseNumber}',
+                          'PILLAR ${phase.phaseNumber}',
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,

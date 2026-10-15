@@ -39,6 +39,21 @@ class HapticService {
     }
   }
 
+  /// A multi-stage cascading celebration for closing daily rings or slaying impulses
+  static Future<void> dopamineCascade() async {
+    if (await Vibration.hasVibrator()) {
+      if (await Vibration.hasAmplitudeControl()) {
+        await Vibration.vibrate(duration: 15, amplitude: 100);
+        await Future.delayed(const Duration(milliseconds: 60));
+        await Vibration.vibrate(duration: 20, amplitude: 180);
+        await Future.delayed(const Duration(milliseconds: 60));
+        await Vibration.vibrate(duration: 40, amplitude: 255);
+      } else {
+        await Vibration.vibrate(pattern: [0, 30, 40, 50, 40, 80]);
+      }
+    }
+  }
+
   // Legacy compatibility wrappers
   static void selection() => subtleClick();
   static void light() => subtleClick();

@@ -1,5 +1,6 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'ad_service.dart';
+import '../logger_service.dart';
 
 class AppOpenAdManager {
   AppOpenAd? _appOpenAd;
@@ -21,11 +22,18 @@ class AppOpenAdManager {
           _appOpenAd = ad;
         },
         onAdFailedToLoad: (error) {
-          print('AppOpenAd failed to load: $error');
+          LoggerService.log(
+            'AppOpenAd failed to load: $error',
+            category: LogCategory.warning,
+            error: error,
+          );
           if (error.message.contains('JavascriptEngine')) {
             _isWebViewBroken = true;
-            print('[DUEDO_AUDIT:ADS] WebView JavascriptEngine unavailable. '
-                'Ads disabled for this session. User should update Android System WebView.');
+            LoggerService.log(
+              '[DUEDO_AUDIT:ADS] WebView JavascriptEngine unavailable. '
+              'Ads disabled for this session. User should update Android System WebView.',
+              category: LogCategory.error,
+            );
           }
         },
       ),
@@ -69,7 +77,11 @@ class AppOpenAdManager {
     try {
       _appOpenAd!.show();
     } catch (e) {
-      print('[DUEDO_AUDIT:ADS] AppOpenAd.show() failed: $e');
+      LoggerService.log(
+        '[DUEDO_AUDIT:ADS] AppOpenAd.show() failed: $e',
+        category: LogCategory.error,
+        error: e,
+      );
       _isShowingAd = false;
       _appOpenAd?.dispose();
       _appOpenAd = null;

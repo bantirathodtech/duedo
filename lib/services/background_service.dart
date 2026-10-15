@@ -50,7 +50,6 @@ class BackgroundService {
 
     await Workmanager().initialize(
       callbackDispatcher,
-      isInDebugMode: false,
     );
   }
 

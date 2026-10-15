@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../models/app_enums.dart';
 import 'database.dart';
 
@@ -112,13 +113,13 @@ class FinancialLogicService {
     return insights;
   }
 
-  FreedomData calculateFreedomData(List<Obligation> obligations, double monthlyIncome) {
+  FreedomData calculateFreedomData(List<Obligation> obligations, double monthlyIncome, {double extraMonthlyPayment = 0.0}) {
     // We move the actual logic to a static method so 'compute' can use it
-    return _calculateFreedomDataInternal(obligations, monthlyIncome);
+    return _calculateFreedomDataInternal(obligations, monthlyIncome, extraMonthlyPayment: extraMonthlyPayment);
   }
 
   /// Internal logic for background or synchronous execution
-  static FreedomData _calculateFreedomDataInternal(List<Obligation> obligations, double monthlyIncome) {
+  static FreedomData _calculateFreedomDataInternal(List<Obligation> obligations, double monthlyIncome, {double extraMonthlyPayment = 0.0}) {
     final activeDebts = obligations.where((ob) => ob.isActive && ob.type != ObligationType.recurring).toList();
     if (activeDebts.isEmpty) return FreedomData(daysLeft: 0, totalRemainingBalance: 0, targetDate: DateTime.now());
     
@@ -127,7 +128,7 @@ class FinancialLogicService {
         .where((ob) => ob.isActive && ob.type == ObligationType.recurring)
         .fold(0.0, (sum, ob) => sum + ob.amount);
 
-    double baseDisposable = monthlyIncome - recurringTotal;
+    double baseDisposable = monthlyIncome - recurringTotal + extraMonthlyPayment;
     if (baseDisposable <= 0) {
       return FreedomData(daysLeft: 3650, totalRemainingBalance: totalBalance, targetDate: DateTime.now().add(const Duration(days: 3650)));
     }
@@ -311,6 +312,569 @@ class FinancialLogicService {
     if (healthScore >= 500) return 'Top 55%';
     return 'Top 85%';
   }
+
+  /// Calculates the immediate compound interest and time savings of an extra micro-payment
+  SnowflakeImpact calculateSnowflakeImpact(Obligation debt, double snowflakeAmount) {
+    final rate = debt.interestRate > 0 ? debt.interestRate : 11.5;
+    final months = (debt.emiDurationMonths != null && debt.emiDurationMonths! > 0)
+        ? debt.emiDurationMonths!
+        : 24;
+    
+    final interestSaved = snowflakeAmount * (rate / 100.0) * (months / 12.0) * 0.7;
+    final daysSaved = ((snowflakeAmount / (debt.amount > 0 ? debt.amount : 5000.0)) * 24).round().clamp(1, 365);
+
+    String hook;
+    if (snowflakeAmount >= 2000) {
+      hook = 'MASSIVE STRIKE! You just destroyed debt interest.';
+    } else if (snowflakeAmount >= 1000) {
+      hook = 'CRITICAL HIT! Freedom countdown pushed forward.';
+    } else {
+      hook = 'SNOWFLAKE ACTIVE! Micro-discipline yields macro-freedom.';
+    }
+
+    return SnowflakeImpact(
+      amount: snowflakeAmount,
+      interestSaved: interestSaved > 0 ? interestSaved : snowflakeAmount * 0.15,
+      daysSaved: daysSaved,
+      motivationalHook: hook,
+    );
+  }
+
+  /// Calculates survival runway if income immediately drops to 0
+  CrisisStressTestResult calculateCrisisStressTest(
+    List<Obligation> obligations, 
+    double monthlyIncome, 
+    double emergencyFund,
+  ) {
+    double totalBurn = 0;
+    double discretionarySavings = 0;
+    final plan = <CrisisTriageItem>[];
+
+    for (final ob in obligations) {
+      if (!ob.isActive) continue;
+      final isDiscretionary = ob.category.toLowerCase() == 'entertainment' || 
+                              ob.category.toLowerCase() == 'subscription' || 
+                              ob.category.toLowerCase() == 'shopping';
+      
+      final isHighPriority = ob.priority == PriorityLevel.high || ob.type == ObligationType.emi;
+
+      if (isDiscretionary) {
+        discretionarySavings += ob.amount;
+        plan.add(CrisisTriageItem(
+          title: ob.title,
+          monthlyAmount: ob.amount,
+          actionRecommendation: 'Freeze immediately. Zero credit score penalty.',
+          priorityLevel: 1,
+        ));
+      } else if (ob.gracePeriodDays > 0) {
+        totalBurn += ob.amount;
+        plan.add(CrisisTriageItem(
+          title: ob.title,
+          monthlyAmount: ob.amount,
+          actionRecommendation: 'Deploy ${ob.gracePeriodDays}-day grace shield to delay cash outflow.',
+          priorityLevel: 2,
+        ));
+      } else {
+        totalBurn += ob.amount;
+        plan.add(CrisisTriageItem(
+          title: ob.title,
+          monthlyAmount: ob.amount,
+          actionRecommendation: isHighPriority ? 'Sacred core. Must pay to protect credit score.' : 'Essential obligation.',
+          priorityLevel: 3,
+        ));
+      }
+    }
+
+    final effectiveLiquidFund = emergencyFund > 0 ? emergencyFund : (monthlyIncome > 0 ? monthlyIncome * 0.75 : totalBurn * 0.5);
+    final dailyBurn = totalBurn > 0 ? (totalBurn / 30.0) : 100.0;
+    final runwayDays = (effectiveLiquidFund / dailyBurn).round();
+
+    return CrisisStressTestResult(
+      runwayDays: runwayDays,
+      monthlySurvivalBurn: totalBurn,
+      discretionarySavingsPotential: discretionarySavings,
+      triagePlan: plan,
+    );
+  }
+
+  /// Calculates the real-time interest bleed rate across all active debts
+  InterestBleedMetrics calculateInterestBleed(List<Obligation> obligations) {
+    double monthlyInterest = 0.0;
+    int debtCount = 0;
+
+    for (final ob in obligations) {
+      if (!ob.isActive) continue;
+      if (ob.type == ObligationType.emi || ob.totalBalance > 0) {
+        debtCount++;
+        final balance = ob.totalBalance > 0 ? ob.totalBalance : (ob.amount * 12.0);
+        final rate = ob.interestRate > 0 ? ob.interestRate : 13.5;
+        final annualInterest = balance * (rate / 100.0);
+        monthlyInterest += (annualInterest / 12.0);
+      }
+    }
+
+    final dailyBleed = monthlyInterest > 0 ? (monthlyInterest / 30.0) : 0.0;
+    final hourlyBleed = monthlyInterest > 0 ? (monthlyInterest / 720.0) : 0.0;
+    final perMinuteBleed = hourlyBleed > 0 ? (hourlyBleed / 60.0) : 0.0;
+
+    return InterestBleedMetrics(
+      monthlyInterest: monthlyInterest,
+      dailyBleed: dailyBleed,
+      hourlyBleed: hourlyBleed,
+      perMinuteBleed: perMinuteBleed,
+      activeDebtsCount: debtCount,
+    );
+  }
+
+  /// Scans for high-interest debts (>18% APR) and simulates consolidation arbitrage
+  List<ArbitrageOpportunity> detectArbitrageOpportunities(List<Obligation> obligations) {
+    final opportunities = <ArbitrageOpportunity>[];
+    const targetApr = 11.5; // Benchmark prime consolidation loan rate
+
+    for (final ob in obligations) {
+      if (!ob.isActive || ob.status == ObligationStatus.paid) continue;
+      if (ob.interestRate >= 18.0) {
+        final balance = ob.totalBalance > 0 ? ob.totalBalance : (ob.amount * 12.0);
+        final currentAnnualInterest = balance * (ob.interestRate / 100.0);
+        final targetAnnualInterest = balance * (targetApr / 100.0);
+        final annualSaved = currentAnnualInterest - targetAnnualInterest;
+        final monthlySavings = annualSaved / 12.0;
+        final totalInterestSaved = annualSaved * 1.5;
+        final monthsAccelerated = (totalInterestSaved / (ob.amount > 0 ? ob.amount : 1000)).round().clamp(1, 36);
+
+        opportunities.add(ArbitrageOpportunity(
+          obligation: ob,
+          currentApr: ob.interestRate,
+          targetApr: targetApr,
+          monthlySavings: monthlySavings,
+          totalInterestSaved: totalInterestSaved,
+          monthsAccelerated: monthsAccelerated,
+        ));
+      }
+    }
+    return opportunities;
+  }
+
+  /// Calculates dynamic daily safe-to-spend allowance based on uncommitted monthly cash
+  SafeToSpendMetrics calculateSafeToSpend({
+    required List<Obligation> obligations,
+    required double monthlyIncome,
+    DateTime? currentDate,
+  }) {
+    final now = currentDate ?? DateTime.now();
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+    final daysLeft = (lastDayOfMonth - now.day + 1).clamp(1, 31);
+
+    double pendingObligations = 0.0;
+    for (final ob in obligations) {
+      if (!ob.isActive || ob.status == ObligationStatus.paid) continue;
+      final due = ob.nextDueDate ?? ob.startDate;
+      if (due.isBefore(DateTime(now.year, now.month + 1, 1))) {
+        pendingObligations += ob.amount;
+      }
+    }
+
+    final freePool = monthlyIncome > 0 ? (monthlyIncome - pendingObligations) : 0.0;
+    final dailySafe = freePool > 0 ? (freePool / daysLeft) : 0.0;
+
+    SafeToSpendStatus status;
+    if (monthlyIncome <= 0 || freePool <= 0) {
+      status = SafeToSpendStatus.critical;
+    } else if (dailySafe > (monthlyIncome / 30.0) * 0.4) {
+      status = SafeToSpendStatus.abundant;
+    } else if (dailySafe > (monthlyIncome / 30.0) * 0.15) {
+      status = SafeToSpendStatus.moderate;
+    } else {
+      status = SafeToSpendStatus.restricted;
+    }
+
+    return SafeToSpendMetrics(
+      dailyAmount: dailySafe,
+      monthlyRemainingPool: freePool,
+      pendingObligationsThisMonth: pendingObligations,
+      daysLeftInMonth: daysLeft,
+      status: status,
+    );
+  }
+
+  /// Scans recurring obligations for ghost leakage and subscription overlap
+  List<GhostSubscriptionInsight> detectGhostSubscriptions(List<Obligation> obligations) {
+    final insights = <GhostSubscriptionInsight>[];
+    final recurring = obligations.where((o) => o.isActive && o.type == ObligationType.recurring).toList();
+
+    const ottKeywords = ['netflix', 'prime', 'hotstar', 'disney', 'spotify', 'youtube', 'apple music', 'hulu', 'hbo', 'sony'];
+    final matchedOtt = recurring.where((o) => ottKeywords.any((k) => o.title.toLowerCase().contains(k))).toList();
+
+    if (matchedOtt.length >= 2) {
+      final totalMonthly = matchedOtt.fold(0.0, (sum, o) => sum + o.amount);
+      final fiveYearValue = totalMonthly * 82.486; // 5Y FV at 12% CAGR
+
+      insights.add(GhostSubscriptionInsight(
+        title: 'Streaming Overlap Detected',
+        category: 'Entertainment',
+        count: matchedOtt.length,
+        monthlyLeak: totalMonthly,
+        fiveYearOpportunityCost: fiveYearValue,
+        description: 'You have ${matchedOtt.length} overlapping entertainment subscriptions (${matchedOtt.map((e) => e.title).join(', ')}).',
+        suspectObligations: matchedOtt,
+      ));
+    }
+
+    for (final ob in recurring) {
+      if (ob.priority == PriorityLevel.low && ob.amount > 500) {
+        final fiveYearValue = ob.amount * 82.486;
+        insights.add(GhostSubscriptionInsight(
+          title: 'Low-Priority Leak: ${ob.title}',
+          category: ob.category,
+          count: 1,
+          monthlyLeak: ob.amount,
+          fiveYearOpportunityCost: fiveYearValue,
+          description: '${ob.title} is marked low priority. Reclaiming this frees ${ob.amount.toStringAsFixed(0)}/mo.',
+          suspectObligations: [ob],
+        ));
+      }
+    }
+
+    return insights;
+  }
+
+  /// Formulates the 60-second Payday Blitz reallocation plan
+  PaydayBlitzPlan calculatePaydayBlitz({
+    required double monthlyIncome,
+    required List<Obligation> obligations,
+  }) {
+    double totalLockedDues = 0.0;
+    final activeDues = <Obligation>[];
+    for (final ob in obligations) {
+      if (!ob.isActive || ob.status == ObligationStatus.paid) continue;
+      if (ob.type == ObligationType.emi || ob.type == ObligationType.recurring) {
+        totalLockedDues += ob.amount;
+        activeDues.add(ob);
+      }
+    }
+
+    final discretionaryPool = (monthlyIncome - totalLockedDues).clamp(0.0, double.infinity);
+    
+    // Find highest APR debt with outstanding balance
+    Obligation? targetDebt;
+    final debtsWithApr = obligations
+        .where((o) => o.isActive && o.status != ObligationStatus.paid && (o.totalBalance > 0 || o.type == ObligationType.emi))
+        .toList();
+    if (debtsWithApr.isNotEmpty) {
+      debtsWithApr.sort((a, b) => b.interestRate.compareTo(a.interestRate));
+      targetDebt = debtsWithApr.first;
+    }
+
+    final recommendedSnowflake = discretionaryPool > 0 
+        ? ((discretionaryPool * 0.15).clamp(500.0, discretionaryPool).toDouble())
+        : 0.0;
+
+    final newDailySafeToSpend = discretionaryPool > recommendedSnowflake 
+        ? (discretionaryPool - recommendedSnowflake) / 30.0 
+        : (discretionaryPool / 30.0);
+
+    int daysAccelerated = 0;
+    if (targetDebt != null && recommendedSnowflake > 0) {
+      daysAccelerated = ((recommendedSnowflake / (targetDebt.amount > 0 ? targetDebt.amount : 1000)) * 30).round().clamp(5, 120);
+    }
+
+    return PaydayBlitzPlan(
+      monthlyIncome: monthlyIncome,
+      totalLockedDues: totalLockedDues,
+      discretionaryPool: discretionaryPool,
+      recommendedSnowflake: recommendedSnowflake,
+      targetDebt: targetDebt,
+      newDailySafeToSpend: newDailySafeToSpend,
+      daysAccelerated: daysAccelerated,
+      lockedObligations: activeDues,
+    );
+  }
+
+  /// Calculates the viral, privacy-first Monthly Freedom Tape story metrics
+  FreedomTapeMetrics calculateFreedomTapeMetrics({
+    required List<Obligation> obligations,
+    required double totalShieldedFromVault,
+    required int currentStreak,
+    double monthlyIncome = 0.0,
+  }) {
+    final now = DateTime.now();
+    final monthName = DateFormat('MMMM yyyy').format(now);
+
+    final bleed = calculateInterestBleed(obligations);
+    final freedom = calculateFreedomData(obligations, monthlyIncome);
+
+    final interestPrevented = totalShieldedFromVault * 0.18;
+    final totalInterestKilled = interestPrevented + (bleed.monthlyInterest * 0.25);
+    final freedomDaysGained = ((totalShieldedFromVault / 500) + (currentStreak * 1.5)).round().clamp(3, 180);
+
+    return FreedomTapeMetrics(
+      monthName: monthName,
+      totalInterestKilled: totalInterestKilled,
+      totalShieldedFromVault: totalShieldedFromVault,
+      freedomDaysGained: freedomDaysGained,
+      streakDays: currentStreak,
+      projectedDebtFreeYear: freedom.targetDate.year,
+      activeDebtsCount: bleed.activeDebtsCount,
+    );
+  }
+
+  /// Calculates Credit Score Armor and grace period prioritization during cash crunches
+  GraceShieldPlan calculateGraceShield({
+    required List<Obligation> obligations,
+    required double availableEmergencyCash,
+  }) {
+    final activeDues = obligations
+        .where((o) => o.isActive && o.status != ObligationStatus.paid)
+        .toList();
+
+    final tier1 = <Obligation>[];
+    final tier2 = <Obligation>[];
+    final tier3 = <Obligation>[];
+
+    for (final ob in activeDues) {
+      final cat = ob.category.toLowerCase();
+      final title = ob.title.toLowerCase();
+      if (cat.contains('credit') || cat.contains('card') || title.contains('card') || ob.interestRate >= 30) {
+        tier1.add(ob);
+      } else if (cat.contains('home') || cat.contains('housing') || cat.contains('auto') || cat.contains('vehicle')) {
+        tier3.add(ob);
+      } else {
+        tier2.add(ob);
+      }
+    }
+
+    final prioritizedOrder = [...tier1, ...tier2, ...tier3];
+    double runningCash = availableEmergencyCash;
+    final coveredObligations = <Obligation>[];
+    final deferredObligations = <GraceShieldDeferredItem>[];
+
+    for (final ob in prioritizedOrder) {
+      if (runningCash >= ob.amount) {
+        runningCash -= ob.amount;
+        coveredObligations.add(ob);
+      } else {
+        int safeBufferDays = 0;
+        String actionPlan = '';
+        if (tier1.contains(ob)) {
+          safeBufferDays = 1;
+          actionPlan = 'CRITICAL: Pay minimum due or request 48-hour waiver to protect CIBIL.';
+        } else if (tier2.contains(ob)) {
+          safeBufferDays = 3;
+          actionPlan = 'GRACE PERIOD: Contact lender to utilize 3-day window with zero credit report.';
+        } else {
+          safeBufferDays = 7;
+          actionPlan = 'SHIELDED BUFFER: Secured loans have 7-day technical grace before NPA classification.';
+        }
+
+        deferredObligations.add(GraceShieldDeferredItem(
+          obligation: ob,
+          safeBufferDays: safeBufferDays,
+          defenseAction: actionPlan,
+        ));
+      }
+    }
+
+    String securityStatus;
+    if (deferredObligations.isEmpty) {
+      securityStatus = 'ARMORED (100% COVERED)';
+    } else if (!deferredObligations.any((d) => tier1.contains(d.obligation))) {
+      securityStatus = 'DEFENDED (CREDIT CARDS SHIELDED)';
+    } else {
+      securityStatus = 'CRITICAL ACTION REQUIRED';
+    }
+
+    return GraceShieldPlan(
+      availableCash: availableEmergencyCash,
+      coveredObligations: coveredObligations,
+      deferredObligations: deferredObligations,
+      securityStatus: securityStatus,
+      totalUncovered: deferredObligations.fold(0.0, (sum, d) => sum + d.obligation.amount),
+    );
+  }
+}
+
+class PaydayBlitzPlan {
+  final double monthlyIncome;
+  final double totalLockedDues;
+  final double discretionaryPool;
+  final double recommendedSnowflake;
+  final Obligation? targetDebt;
+  final double newDailySafeToSpend;
+  final int daysAccelerated;
+  final List<Obligation> lockedObligations;
+
+  PaydayBlitzPlan({
+    required this.monthlyIncome,
+    required this.totalLockedDues,
+    required this.discretionaryPool,
+    required this.recommendedSnowflake,
+    required this.targetDebt,
+    required this.newDailySafeToSpend,
+    required this.daysAccelerated,
+    required this.lockedObligations,
+  });
+}
+
+class FreedomTapeMetrics {
+  final String monthName;
+  final double totalInterestKilled;
+  final double totalShieldedFromVault;
+  final int freedomDaysGained;
+  final int streakDays;
+  final int projectedDebtFreeYear;
+  final int activeDebtsCount;
+
+  FreedomTapeMetrics({
+    required this.monthName,
+    required this.totalInterestKilled,
+    required this.totalShieldedFromVault,
+    required this.freedomDaysGained,
+    required this.streakDays,
+    required this.projectedDebtFreeYear,
+    required this.activeDebtsCount,
+  });
+}
+
+class GraceShieldDeferredItem {
+  final Obligation obligation;
+  final int safeBufferDays;
+  final String defenseAction;
+
+  GraceShieldDeferredItem({
+    required this.obligation,
+    required this.safeBufferDays,
+    required this.defenseAction,
+  });
+}
+
+class GraceShieldPlan {
+  final double availableCash;
+  final List<Obligation> coveredObligations;
+  final List<GraceShieldDeferredItem> deferredObligations;
+  final String securityStatus;
+  final double totalUncovered;
+
+  GraceShieldPlan({
+    required this.availableCash,
+    required this.coveredObligations,
+    required this.deferredObligations,
+    required this.securityStatus,
+    required this.totalUncovered,
+  });
+}
+
+enum SafeToSpendStatus { abundant, moderate, restricted, critical }
+
+class SafeToSpendMetrics {
+  final double dailyAmount;
+  final double monthlyRemainingPool;
+  final double pendingObligationsThisMonth;
+  final int daysLeftInMonth;
+  final SafeToSpendStatus status;
+
+  SafeToSpendMetrics({
+    required this.dailyAmount,
+    required this.monthlyRemainingPool,
+    required this.pendingObligationsThisMonth,
+    required this.daysLeftInMonth,
+    required this.status,
+  });
+}
+
+class GhostSubscriptionInsight {
+  final String title;
+  final String category;
+  final int count;
+  final double monthlyLeak;
+  final double fiveYearOpportunityCost;
+  final String description;
+  final List<Obligation> suspectObligations;
+
+  GhostSubscriptionInsight({
+    required this.title,
+    required this.category,
+    required this.count,
+    required this.monthlyLeak,
+    required this.fiveYearOpportunityCost,
+    required this.description,
+    required this.suspectObligations,
+  });
+}
+
+class ArbitrageOpportunity {
+  final Obligation obligation;
+  final double currentApr;
+  final double targetApr;
+  final double monthlySavings;
+  final double totalInterestSaved;
+  final int monthsAccelerated;
+
+  ArbitrageOpportunity({
+    required this.obligation,
+    required this.currentApr,
+    required this.targetApr,
+    required this.monthlySavings,
+    required this.totalInterestSaved,
+    required this.monthsAccelerated,
+  });
+}
+
+class InterestBleedMetrics {
+  final double monthlyInterest;
+  final double dailyBleed;
+  final double hourlyBleed;
+  final double perMinuteBleed;
+  final int activeDebtsCount;
+
+  InterestBleedMetrics({
+    required this.monthlyInterest,
+    required this.dailyBleed,
+    required this.hourlyBleed,
+    required this.perMinuteBleed,
+    required this.activeDebtsCount,
+  });
+}
+
+class SnowflakeImpact {
+  final double amount;
+  final double interestSaved;
+  final int daysSaved;
+  final String motivationalHook;
+
+  SnowflakeImpact({
+    required this.amount,
+    required this.interestSaved,
+    required this.daysSaved,
+    required this.motivationalHook,
+  });
+}
+
+class CrisisTriageItem {
+  final String title;
+  final double monthlyAmount;
+  final String actionRecommendation;
+  final int priorityLevel;
+
+  CrisisTriageItem({
+    required this.title,
+    required this.monthlyAmount,
+    required this.actionRecommendation,
+    required this.priorityLevel,
+  });
+}
+
+class CrisisStressTestResult {
+  final int runwayDays;
+  final double monthlySurvivalBurn;
+  final double discretionarySavingsPotential;
+  final List<CrisisTriageItem> triagePlan;
+
+  CrisisStressTestResult({
+    required this.runwayDays,
+    required this.monthlySurvivalBurn,
+    required this.discretionarySavingsPotential,
+    required this.triagePlan,
+  });
 }
 
 class _DebtSim {

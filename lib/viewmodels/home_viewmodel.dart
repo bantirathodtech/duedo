@@ -160,6 +160,14 @@ class HomeViewModel extends StateNotifier<HomeState> {
        if (await _milestoneService.unlockMilestone(MilestoneType.consistencyMaster)) newlyUnlocked = true;
     }
 
+    // 5. The Sovereign Member (Net Worth Inversion: Total Paid >= 50% of Total Obligation Load)
+    final totalRemaining = freedomData.totalRemainingBalance;
+    final totalPaid = state.payments.fold(0.0, (sum, p) => sum + p.amountPaid);
+    final totalLoad = totalRemaining + totalPaid;
+    if (totalPaid > 0 && totalLoad > 0 && (totalPaid / totalLoad) >= 0.5) {
+      if (await _milestoneService.unlockMilestone(MilestoneType.sovereignMember)) newlyUnlocked = true;
+    }
+
     if (newlyUnlocked) {
       state = state.copyWith(hasNewlyUnlockedMilestone: true);
       _loadMilestones();
@@ -273,6 +281,71 @@ class HomeViewModel extends StateNotifier<HomeState> {
     }
   }
 
+  SnowflakeImpact previewSnowflake(Obligation debt, double amount) {
+    return _financialLogic.calculateSnowflakeImpact(debt, amount);
+  }
+
+  Future<SnowflakeImpact> applySnowflake(Obligation debt, double amount) async {
+    final impact = _financialLogic.calculateSnowflakeImpact(debt, amount);
+    await recordPayment(debt, amount, note: 'Debt Snowflake Injection');
+    return impact;
+  }
+
+  InterestBleedMetrics get bleedMetrics {
+    return _financialLogic.calculateInterestBleed(state.obligations);
+  }
+
+  CrisisStressTestResult runCrisisStressTest({double emergencyFund = 0.0}) {
+    return _financialLogic.calculateCrisisStressTest(
+      state.obligations,
+      state.settings?.monthlyIncome ?? 0,
+      emergencyFund,
+    );
+  }
+
+  List<ArbitrageOpportunity> get arbitrageOpportunities {
+    return _financialLogic.detectArbitrageOpportunities(state.obligations);
+  }
+
+  SafeToSpendMetrics get safeToSpendMetrics {
+    return _financialLogic.calculateSafeToSpend(
+      obligations: state.obligations,
+      monthlyIncome: state.settings?.monthlyIncome ?? 0,
+    );
+  }
+
+  List<GhostSubscriptionInsight> get ghostSubscriptions {
+    return _financialLogic.detectGhostSubscriptions(state.obligations);
+  }
+
+  PaydayBlitzPlan get paydayBlitzPlan {
+    return _financialLogic.calculatePaydayBlitz(
+      monthlyIncome: state.settings?.monthlyIncome ?? 0,
+      obligations: state.obligations,
+    );
+  }
+
+  bool get isTodayPayday {
+    final payday = state.settings?.paydayOfMonth ?? 1;
+    return DateTime.now().day == payday;
+  }
+
+  FreedomTapeMetrics getFreedomTapeMetrics(double totalShieldedFromVault, int currentStreak) {
+    return _financialLogic.calculateFreedomTapeMetrics(
+      obligations: state.obligations,
+      totalShieldedFromVault: totalShieldedFromVault,
+      currentStreak: currentStreak,
+      monthlyIncome: state.settings?.monthlyIncome ?? 0,
+    );
+  }
+
+  GraceShieldPlan calculateGraceShield(double availableEmergencyCash) {
+    return _financialLogic.calculateGraceShield(
+      obligations: state.obligations,
+      availableEmergencyCash: availableEmergencyCash,
+    );
+  }
+
   List<Obligation> get sortedObligations {
     final list = List<Obligation>.from(state.obligations);
     list.sort((a, b) {
@@ -332,6 +405,14 @@ class HomeViewModel extends StateNotifier<HomeState> {
 
   FreedomData get freedomData {
     return _financialLogic.calculateFreedomData(state.obligations, state.settings?.monthlyIncome ?? 0);
+  }
+
+  FreedomData getFreedomDataWithAcceleration(double extraMonthlyPayment) {
+    return _financialLogic.calculateFreedomData(
+      state.obligations, 
+      state.settings?.monthlyIncome ?? 0,
+      extraMonthlyPayment: extraMonthlyPayment,
+    );
   }
 
   List<IntelligenceAlert> get intelligenceAlerts {

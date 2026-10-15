@@ -92,6 +92,7 @@ void main() {
       await tester.enterText(find.widgetWithText(TextField, 'Monthly Net Income'), '75000');
       await tester.enterText(find.widgetWithText(TextField, 'Payday (Day of Month, 1-31)'), '5');
       
+      await tester.ensureVisible(find.text('Save Financial Profile'));
       await tester.tap(find.text('Save Financial Profile'));
       await tester.pumpAndSettle();
 
@@ -106,6 +107,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.widgetWithText(TextField, 'Payday (Day of Month, 1-31)'), '40');
+      await tester.ensureVisible(find.text('Save Financial Profile'));
       await tester.tap(find.text('Save Financial Profile'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));

@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'database_service.dart';
 import 'haptic_service.dart';
+import 'logger_service.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
@@ -38,7 +39,7 @@ class NotificationService {
             if (id != null) {
               // Mark as paid via DatabaseService directly for speed
               await _dbService.markObligationAsPaid(id);
-              print("Notification Action: Settled obligation $id");
+              LoggerService.log("Notification Action: Settled obligation $id", category: LogCategory.financial);
             }
           }
         }
@@ -130,6 +131,43 @@ class NotificationService {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> showFreedomClockTicker({
+    required int daysToDebtFreedom,
+    required double totalDebtRemaining,
+    required String currency,
+    String? nextUrgentDebt,
+  }) async {
+    final title = '⏳ $daysToDebtFreedom Days to Complete Debt Freedom';
+    final body = 'Remaining: $currency${totalDebtRemaining.toStringAsFixed(0)}'
+        '${nextUrgentDebt != null ? ' • Next: $nextUrgentDebt' : ''}';
+
+    try {
+      await _notifications.show(
+        id: 8888,
+        title: title,
+        body: body,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'freedom_ticker',
+            'Freedom Countdown Ticker',
+            channelDescription: 'Live lock screen countdown to debt freedom',
+            importance: Importance.low,
+            priority: Priority.low,
+            ongoing: false,
+            autoCancel: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentSound: false,
+          ),
+        ),
+      );
+    } catch (e) {
+      LoggerService.log('Freedom clock ticker notification failed: $e', category: LogCategory.error);
     }
   }
 

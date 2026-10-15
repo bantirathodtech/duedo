@@ -5,7 +5,7 @@ import 'ui/theme/app_theme.dart';
 import 'ui/screens/main_screen.dart';
 import 'ui/widgets/app_initializer.dart';
 import 'ui/widgets/vault_gate.dart';
-import 'services/app_open_ad_manager.dart';
+import 'services/ads/app_open_ad_manager.dart';
 import 'services/logger_service.dart';
 
 
@@ -118,8 +118,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
         return child!;
       },
-      home: AppInitializer(
-        child: const VaultGate(
+      home: const AppInitializer(
+        child: VaultGate(
           child: MainScreen(),
         ),
       ),

@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../services/milestone_service.dart';
+import '../../services/haptic_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/milestone_share_modal.dart';
 
 class MilestonesScreen extends ConsumerWidget {
   const MilestonesScreen({super.key});
@@ -12,7 +14,14 @@ class MilestonesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeViewModelProvider);
+    final viewModel = ref.read(homeViewModelProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final totalRemaining = viewModel.freedomData.totalRemainingBalance;
+    final totalPaid = state.payments.fold(0.0, (sum, p) => sum + p.amountPaid);
+    final totalLoad = totalRemaining + totalPaid;
+    final freedomPct = totalLoad > 0 ? (totalPaid / totalLoad).clamp(0.0, 1.0) : 0.0;
+    final streak = state.settings?.paymentStreak ?? 3;
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
@@ -121,6 +130,8 @@ class MilestonesScreen extends ConsumerWidget {
                     milestone: milestone,
                     isUnlocked: isUnlocked,
                     isDark: isDark,
+                    streakDays: streak,
+                    freedomPercentage: freedomPct,
                   );
                 },
                 childCount: state.milestones.length,
@@ -146,16 +157,41 @@ class _BadgeCard extends StatelessWidget {
   final Milestone milestone;
   final bool isUnlocked;
   final bool isDark;
+  final int streakDays;
+  final double freedomPercentage;
 
   const _BadgeCard({
     required this.milestone,
     required this.isUnlocked,
     required this.isDark,
+    required this.streakDays,
+    required this.freedomPercentage,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        if (isUnlocked) {
+          MilestoneShareModal.show(
+            context,
+            milestone: milestone,
+            streakDays: streakDays,
+            freedomPercentage: freedomPercentage,
+            isDark: isDark,
+          );
+        } else {
+          HapticService.selection();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🔒 Keep going to unlock "${milestone.title}"!'),
+              backgroundColor: isDark ? const Color(0xFF141724) : Colors.black87,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      child: Container(
       decoration: BoxDecoration(
         color: isUnlocked 
           ? (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white)
@@ -220,6 +256,7 @@ class _BadgeCard extends StatelessWidget {
           ],
         ],
       ),
+    ),
     );
   }
 }

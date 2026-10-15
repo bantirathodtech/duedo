@@ -34,14 +34,23 @@ class SnowballCurveChart extends StatelessWidget {
     }
 
     return Container(
-      height: 200,
+      height: 210,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
+        color: isDark ? AppTheme.cardDark : AppTheme.cardLight,
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+          color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+          width: 0.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.04),
+            blurRadius: 20,
+            spreadRadius: -4,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,24 +58,42 @@ class SnowballCurveChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'YOUR PATH TO FREEDOM',
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'FREEDOM TRAJECTORY',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                      color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                    ),
+                  ),
+                ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppTheme.primary.withValues(alpha: isDark ? 0.12 : 0.08),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '${(monthlyBalances.length > monthlyWealth.length ? monthlyBalances.length : monthlyWealth.length) - 1} MONTHS PROJECTION',
-                  style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                  '${(monthlyBalances.length > monthlyWealth.length ? monthlyBalances.length : monthlyWealth.length) - 1}M SIMULATION',
+                  style: GoogleFonts.inter(
+                    fontSize: 9, 
+                    fontWeight: FontWeight.w800, 
+                    color: AppTheme.primary,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ],
@@ -74,12 +101,12 @@ class SnowballCurveChart extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _LegendItem(color: AppTheme.primary, label: 'Debt Path', isDark: isDark),
+              _LegendItem(color: AppTheme.primary, label: 'Debt Amortization', isDark: isDark),
               const SizedBox(width: 16),
-              _LegendItem(color: const Color(0xFF00E676), label: 'Wealth Flip', isDark: isDark),
+              _LegendItem(color: const Color(0xFF00E676), label: 'Wealth Accumulation', isDark: isDark),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Expanded(
             child: LineChart(
               LineChartData(
@@ -94,10 +121,9 @@ class SnowballCurveChart extends StatelessWidget {
                   LineChartBarData(
                     spots: debtSpots,
                     isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.5)],
-                    ),
-                    barWidth: 3,
+                    curveSmoothness: 0.35,
+                    color: AppTheme.primary,
+                    barWidth: 2.5,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
@@ -105,7 +131,10 @@ class SnowballCurveChart extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [AppTheme.primary.withValues(alpha: 0.15), AppTheme.primary.withValues(alpha: 0.0)],
+                        colors: [
+                          AppTheme.primary.withValues(alpha: isDark ? 0.22 : 0.14),
+                          AppTheme.primary.withValues(alpha: 0.0),
+                        ],
                       ),
                     ),
                   ),
@@ -113,10 +142,9 @@ class SnowballCurveChart extends StatelessWidget {
                     LineChartBarData(
                       spots: wealthSpots,
                       isCurved: true,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF00E676), Color(0xFF1DE9B6)],
-                      ),
-                      barWidth: 3,
+                      curveSmoothness: 0.35,
+                      color: const Color(0xFF00E676),
+                      barWidth: 2.5,
                       isStrokeCapRound: true,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
@@ -124,14 +152,17 @@ class SnowballCurveChart extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [const Color(0xFF00E676).withValues(alpha: 0.1), Colors.transparent],
+                          colors: [
+                            const Color(0xFF00E676).withValues(alpha: isDark ? 0.20 : 0.12),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
                     ),
                 ],
               ),
-              duration: const Duration(milliseconds: 2000),
-              curve: Curves.easeInOutBack,
+              duration: const Duration(milliseconds: 1500),
+              curve: Curves.easeOutCubic,
             ),
           ),
         ],

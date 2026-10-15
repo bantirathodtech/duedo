@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../logger_service.dart';
 
 final adServiceProvider = Provider((ref) => AdMobService());
 
@@ -71,19 +72,26 @@ class AdMobService {
   }
 
   static final BannerAdListener bannerListener = BannerAdListener(
-    onAdLoaded: (ad) => print('Ad loaded: ${ad.adUnitId}'),
+    onAdLoaded: (ad) => LoggerService.log('Ad loaded: ${ad.adUnitId}'),
     onAdFailedToLoad: (ad, error) {
       // Use microtask to ensure we don't dispose while the native side is still processing
       Future.microtask(() => ad.dispose());
-      print('Ad Load Failure (${ad.adUnitId}): $error');
+      LoggerService.log(
+        'Ad Load Failure (${ad.adUnitId}): $error',
+        category: LogCategory.warning,
+        error: error,
+      );
       if (error.message.contains('JavascriptEngine')) {
         isHealthy = false;
-        print('[DUEDO_AUDIT:ADS] CRITICAL: WebView JavascriptEngine unavailable on this device. '
-            'All ad operations suspended. Recommend user updates Android System WebView.');
+        LoggerService.log(
+          '[DUEDO_AUDIT:ADS] CRITICAL: WebView JavascriptEngine unavailable on this device. '
+          'All ad operations suspended. Recommend user updates Android System WebView.',
+          category: LogCategory.error,
+        );
       }
     },
-    onAdOpened: (ad) => print('Ad opened: ${ad.adUnitId}'),
-    onAdClosed: (ad) => print('Ad closed: ${ad.adUnitId}'),
+    onAdOpened: (ad) => LoggerService.log('Ad opened: ${ad.adUnitId}'),
+    onAdClosed: (ad) => LoggerService.log('Ad closed: ${ad.adUnitId}'),
   );
 
   static Future<void> initialize() async {
@@ -101,7 +109,11 @@ class AdMobService {
       isHealthy = false;
       _isInitialized = true; // Mark done even on failure so callers don't hang.
       if (!_initCompleter.isCompleted) _initCompleter.complete();
-      print('[DUEDO_AUDIT:ADS] MobileAds.initialize() failed: $e');
+      LoggerService.log(
+        '[DUEDO_AUDIT:ADS] MobileAds.initialize() failed: $e',
+        category: LogCategory.error,
+        error: e,
+      );
     }
   }
 }

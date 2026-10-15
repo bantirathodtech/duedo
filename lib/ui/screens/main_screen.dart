@@ -7,7 +7,6 @@ import 'home_screen.dart';
 import 'insights_screen.dart';
 import 'calendar_screen.dart';
 import 'profile_screen.dart';
-import 'ad_gate_screen.dart';
 import '../../services/haptic_service.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -19,7 +18,6 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   int _currentIndex = 0;
-  bool _hasWatchedAd = false;
   final PageController _pageController = PageController();
 
   final List<Widget> _screens = [
@@ -45,26 +43,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeViewModelProvider);
-    final isPremium = homeState.settings?.isPremium ?? false;
 
-    // Loading Guard: Wait for settings to load before deciding to show Ad Gate
+    // Loading Guard: Wait for settings to load
     if (homeState.isLoading || homeState.settings == null) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(color: AppTheme.primary),
         ),
-      );
-    }
-
-    // Show Ad Gate if not premium and hasn't watched yet this session
-    if (!isPremium && !_hasWatchedAd) {
-      return AdGateScreen(
-        onComplete: () {
-          setState(() => _hasWatchedAd = true);
-        },
-        onPremiumPurchased: () {
-          ref.read(homeViewModelProvider.notifier).togglePremium(true);
-        },
       );
     }
 
@@ -95,7 +80,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           body: PageView(
             controller: _pageController,
             onPageChanged: _onPageChanged,
-            physics: const NeverScrollableScrollPhysics(), // Handle navigation via dock
+            physics: const NeverScrollableScrollPhysics(),
             children: _screens,
           ),
           bottomNavigationBar: _buildFloatingDock(context),
@@ -133,18 +118,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      height: 70 + bottomPadding,
-      padding: EdgeInsets.only(bottom: bottomPadding),
+      height: 68 + bottomPadding,
+      padding: EdgeInsets.only(bottom: bottomPadding, top: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withValues(alpha: 0.95),
+        color: isDark ? const Color(0xFF0C0E15) : Colors.white,
         border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 0.5),
+          top: BorderSide(
+            color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+            width: 0.5,
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
@@ -153,7 +141,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         children: [
           Expanded(
             child: _DockItem(
-              icon: Icons.dashboard_rounded,
+              icon: Icons.grid_view_rounded,
               label: 'Overview',
               isSelected: _currentIndex == 0,
               onTap: () => _onItemTapped(0),
@@ -162,7 +150,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           Expanded(
             child: _DockItem(
-              icon: Icons.insights_rounded,
+              icon: Icons.auto_graph_rounded,
               label: 'Intelligence',
               isSelected: _currentIndex == 1,
               onTap: () => _onItemTapped(1),
@@ -171,7 +159,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           Expanded(
             child: _DockItem(
-              icon: Icons.calendar_month_rounded,
+              icon: Icons.calendar_today_rounded,
               label: 'Schedule',
               isSelected: _currentIndex == 2,
               onTap: () => _onItemTapped(2),
@@ -180,7 +168,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           Expanded(
             child: _DockItem(
-              icon: Icons.person_rounded,
+              icon: Icons.account_circle_outlined,
               label: 'Profile',
               isSelected: _currentIndex == 3,
               onTap: () => _onItemTapped(3),
@@ -211,42 +199,42 @@ class _DockItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const activeColor = AppTheme.primary;
-    final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.4) : Colors.grey.shade500;
+    final inactiveColor = isDark ? const Color(0xFF6B7280) : const Color(0xFF94A3B8);
 
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutBack,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedScale(
-              scale: isSelected ? 1.2 : 1.0,
-              duration: const Duration(milliseconds: 300),
-              child: Icon(
-                icon,
-                color: isSelected ? activeColor : inactiveColor,
-                size: 24,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+            decoration: BoxDecoration(
+              color: isSelected 
+                  ? activeColor.withValues(alpha: isDark ? 0.12 : 0.08) 
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 4),
-            AnimatedOpacity(
-              opacity: isSelected ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: activeColor,
-                ),
-              ),
+            child: Icon(
+              icon,
+              color: isSelected ? activeColor : inactiveColor,
+              size: 22,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? activeColor : inactiveColor,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
   }

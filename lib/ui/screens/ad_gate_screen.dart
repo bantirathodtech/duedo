@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/ad_service.dart';
+import '../../services/ads/ad_service.dart';
 import '../../services/haptic_service.dart';
+import '../../services/logger_service.dart';
 import '../theme/app_theme.dart';
 
 class AdGateScreen extends StatefulWidget {
@@ -75,7 +76,10 @@ class _AdGateScreenState extends State<AdGateScreen> {
 
   void _loadRewardedAd() {
     if (!AdMobService.isHealthy) {
-      print('[DUEDO_AUDIT:ADS] Skipping rewarded ad load — WebView engine unavailable.');
+      LoggerService.log(
+        '[DUEDO_AUDIT:ADS] Skipping rewarded ad load — WebView engine unavailable.',
+        category: LogCategory.warning,
+      );
       if (mounted) setState(() => _adLoadFailed = true);
       return;
     }
@@ -94,7 +98,11 @@ class _AdGateScreenState extends State<AdGateScreen> {
           }
         },
         onAdFailedToLoad: (error) {
-          print('RewardedAd failed to load: $error');
+          LoggerService.log(
+            'RewardedAd failed to load: $error',
+            category: LogCategory.warning,
+            error: error,
+          );
           _timeoutTimer?.cancel();
           if (mounted) {
             setState(() => _adLoadFailed = true);

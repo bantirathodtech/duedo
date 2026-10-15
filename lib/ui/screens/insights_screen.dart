@@ -11,7 +11,8 @@ import '../../services/financial_logic_service.dart';
 import '../../services/haptic_service.dart';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import '../../services/ad_service.dart';
+import '../../services/ads/ad_service.dart';
+import '../widgets/freedom_tape_modal.dart';
 
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
@@ -115,13 +116,37 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   const SizedBox(height: 16),
                   _buildStrategyPanel(insightsState, insightsViewModel, currencyFormat, context),
                   const SizedBox(height: 24),
-                  const SizedBox(height: 24),
                   _buildNativeAd(),
                   const SizedBox(height: 32),
                   
                   _buildSectionHeader('Simulation Sandbox'),
                   const SizedBox(height: 16),
                   _buildSandboxPanel(insightsState, insightsViewModel, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('High-APR Arbitrage Radar'),
+                  const SizedBox(height: 16),
+                  _buildRefinanceArbitrageSection(viewModel, currencyFormat, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('👻 Ghost Bill Hunter'),
+                  const SizedBox(height: 16),
+                  _buildGhostBillHunterSection(viewModel, currencyFormat, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('🚨 Crisis Stress-Test (Survival Runway)'),
+                  const SizedBox(height: 16),
+                  _buildCrisisStressTestCard(viewModel, currencyFormat, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('🛡️ Emergency Credit Armor'),
+                  const SizedBox(height: 16),
+                  _buildEmergencyGraceShieldSection(state, viewModel, currencyFormat, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('🎬 Monthly Freedom Tape'),
+                  const SizedBox(height: 16),
+                  _buildFreedomTapeBanner(state, viewModel, currencyFormat, context),
                   const SizedBox(height: 32),
 
                   _buildSectionHeader('Milestone Achievements'),
@@ -908,7 +933,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
+                decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
                 child: const Icon(Icons.star_rounded, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 16),
@@ -941,6 +966,969 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
               child: const Text('Upgrade Now'),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCrisisStressTestCard(HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+    final result = viewModel.runCrisisStressTest();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    Color statusColor;
+    String statusLabel;
+    if (result.runwayDays >= 90) {
+      statusColor = AppTheme.success;
+      statusLabel = 'SHIELDED • 90+ DAYS RUNWAY';
+    } else if (result.runwayDays >= 30) {
+      statusColor = AppTheme.warning;
+      statusLabel = 'VULNERABLE • ${result.runwayDays} DAYS RUNWAY';
+    } else {
+      statusColor = AppTheme.danger;
+      statusLabel = 'CRITICAL • ${result.runwayDays} DAYS RUNWAY';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF10131E) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: statusColor.withValues(alpha: 0.35),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withValues(alpha: isDark ? 0.08 : 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.shield_rounded, color: statusColor, size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.emergency_rounded, color: Colors.grey, size: 18),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '${result.runwayDays} DAYS',
+            style: GoogleFonts.outfit(
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              letterSpacing: -1.0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Survival runway if all income suddenly drops to zero.',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF161925) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'MONTHLY SURVIVAL BURN',
+                        style: GoogleFonts.inter(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        format.format(result.monthlySurvivalBurn),
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(width: 0.5, height: 28, color: Colors.white12),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'FREEZE SAVINGS POTENTIAL',
+                        style: GoogleFonts.inter(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primary,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        format.format(result.discretionarySavingsPotential),
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (result.triagePlan.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            Text(
+              'TRIAGE SURVIVAL ACTION PLAN',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Column(
+              children: result.triagePlan.take(4).map((item) {
+                Color itemColor = item.priorityLevel == 1 
+                    ? const Color(0xFF38BDF8) 
+                    : (item.priorityLevel == 2 ? AppTheme.warning : AppTheme.danger);
+                String tag = item.priorityLevel == 1 ? 'FREEZE' : (item.priorityLevel == 2 ? 'GRACE DELAY' : 'SACRED CORE');
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF141724) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: itemColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          tag,
+                          style: GoogleFonts.inter(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: itemColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.title,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              item.actionRecommendation,
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        format.format(item.monthlyAmount),
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white70 : const Color(0xFF334155),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRefinanceArbitrageSection(HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+    final opportunities = viewModel.arbitrageOpportunities;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (opportunities.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: AppTheme.glassDecoration(context),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.success.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.verified_user_rounded, color: AppTheme.success, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ZERO HIGH-APR DEBT DETECTED',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.success,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'All your obligations are below 18% APR. Your debt structure is in prime health.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: opportunities.map((opp) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF13111C) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFFFF5722).withValues(alpha: 0.35),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF5722).withValues(alpha: isDark ? 0.08 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF5722).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'HIGH-APR RADAR',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFFF5722),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            opp.obligation.title,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${opp.currentApr.toStringAsFixed(1)}% APR',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Refinancing to benchmark 11.5% prime rate unlocks immediate cashflow arbitrage:',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1B1829) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'MONTHLY CASH SAVED',
+                            style: GoogleFonts.inter(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '+${format.format(opp.monthlySavings)}/mo',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(width: 0.5, height: 28, color: Colors.white12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'TOTAL INTEREST KILLED',
+                            style: GoogleFonts.inter(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              format.format(opp.totalInterestSaved),
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFFF5722),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  HapticService.selection();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Consolidating ${opp.obligation.title} from ${opp.currentApr}% to ${opp.targetApr}% saves ${format.format(opp.totalInterestSaved)} total interest and accelerates freedom by ${opp.monthsAccelerated} months!',
+                      ),
+                      backgroundColor: const Color(0xFF1E2235),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF5722).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFFFF5722).withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.bolt_rounded, size: 14, color: Color(0xFFFF5722)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${opp.monthsAccelerated} MONTHS FREEDOM ACCELERATION',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFFFF5722),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildGhostBillHunterSection(HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+    final leaks = viewModel.ghostSubscriptions;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (leaks.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: AppTheme.glassDecoration(context),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.radar_rounded, color: Color(0xFF38BDF8), size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ZERO SUBSCRIPTION LEAKAGE',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF38BDF8),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'No overlapping streaming services or dormant low-priority bills detected.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: leaks.map((leak) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131524) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF9333EA).withValues(alpha: 0.35),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF9333EA).withValues(alpha: isDark ? 0.08 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF9333EA).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'LEAKAGE RADAR',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFC084FC),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            leak.title,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '+${format.format(leak.monthlyLeak)}/mo',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFC084FC),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                leak.description,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1B192C) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.trending_up_rounded, color: AppTheme.success, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '5-YEAR RECLAIMED WEALTH (IF INVESTED)',
+                            style: GoogleFonts.inter(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            format.format(leak.fiveYearOpportunityCost),
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.success,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  HapticService.selection();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Audit checklist: Review and prune ${leak.suspectObligations.map((o) => o.title).join(', ')} to reclaim ${format.format(leak.monthlyLeak)}/mo!',
+                      ),
+                      backgroundColor: const Color(0xFF1E2235),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9333EA).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFF9333EA).withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.content_cut_rounded, size: 14, color: Color(0xFFC084FC)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'SLASH & RECLAIM CASHFLOW',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFFC084FC),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFreedomTapeBanner(HomeState state, HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2E1065), Color(0xFF1E1B4B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFA855F7).withValues(alpha: 0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFA855F7),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.movie_filter_rounded, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MONTHLY FREEDOM TAPE',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFC084FC),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Your 30-Day Victory Story',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'See how much vampire interest you killed, impulses shielded, and freedom days advanced this month.',
+            style: GoogleFonts.inter(fontSize: 12, color: Colors.white70, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.play_arrow_rounded, size: 18),
+              label: const Text('Play Freedom Tape & Share'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFD700),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                final metrics = viewModel.getFreedomTapeMetrics(12500, state.settings?.paymentStreak ?? 0);
+                FreedomTapeModal.show(context, metrics: metrics, currencyFormat: format, isDark: isDark);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmergencyGraceShieldSection(HomeState state, HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+    final rawIncome = state.settings?.monthlyIncome ?? 0;
+    final availableCash = rawIncome > 0 ? (rawIncome * 0.3) : 10000.0;
+    final plan = viewModel.calculateGraceShield(availableCash);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    Color statusColor;
+    if (plan.securityStatus.contains('ARMORED')) {
+      statusColor = AppTheme.success;
+    } else if (plan.securityStatus.contains('DEFENDED')) {
+      statusColor = const Color(0xFF38BDF8);
+    } else {
+      statusColor = AppTheme.danger;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF10131E) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: statusColor.withValues(alpha: 0.35),
+          width: 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.security_rounded, color: statusColor, size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      plan.securityStatus,
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.shield_moon_rounded, color: Colors.grey, size: 18),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Credit Score Armor Triage',
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'If cashflow drops, Duedo routes emergency liquidity to zero-grace debts first to shield your credit report.',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (plan.deferredObligations.isNotEmpty) ...[
+            Text(
+              'DEFERRAL BUFFER WINDOWS',
+              style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.8, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Column(
+              children: plan.deferredObligations.take(3).map((item) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF141724) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${item.safeBufferDays}d BUFFER',
+                          style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: const Color(0xFF38BDF8)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.obligation.title,
+                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                            ),
+                            Text(
+                              item.defenseAction,
+                              style: GoogleFonts.inter(fontSize: 10, color: Colors.grey),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        format.format(item.obligation.amount),
+                        style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified_rounded, color: AppTheme.success, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '100% of upcoming obligations are covered by your emergency cash buffer. Your credit score is fully armored.',
+                      style: GoogleFonts.inter(fontSize: 11, color: AppTheme.success, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

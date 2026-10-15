@@ -1,5 +1,6 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'ad_service.dart';
+import '../logger_service.dart';
 
 class InterstitialAdManager {
   InterstitialAd? _interstitialAd;
@@ -30,7 +31,11 @@ class InterstitialAdManager {
           );
         },
         onAdFailedToLoad: (error) {
-          print('InterstitialAd failed to load: $error');
+          LoggerService.log(
+            'InterstitialAd failed to load: $error',
+            category: LogCategory.warning,
+            error: error,
+          );
           _isLoaded = false;
         },
       ),
@@ -42,13 +47,17 @@ class InterstitialAdManager {
       try {
         _interstitialAd!.show();
       } catch (e) {
-        print('Error showing InterstitialAd: $e');
+        LoggerService.log(
+          'Error showing InterstitialAd: $e',
+          category: LogCategory.error,
+          error: e,
+        );
       } finally {
         _interstitialAd = null;
         _isLoaded = false;
       }
     } else {
-      print('InterstitialAd not ready yet.');
+      LoggerService.log('InterstitialAd not ready yet.', category: LogCategory.info);
       loadAd(); // Try loading again for next time
     }
   }

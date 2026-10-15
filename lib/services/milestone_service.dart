@@ -7,6 +7,7 @@ enum MilestoneType {
   cashflowKing,  // Disposable > 50%
   freedomSeeker, // Freedom < 12 months
   consistencyMaster, // 30 day streak
+  sovereignMember, // Net worth inversion: > 50% principal eliminated
 }
 
 class Milestone {
@@ -67,6 +68,12 @@ class MilestoneService {
       title: 'Consistency Master',
       description: '30-day streak of staying on top of your obligations.',
       icon: '🔥',
+    ),
+    Milestone(
+      type: MilestoneType.sovereignMember,
+      title: 'The Sovereign Member',
+      description: 'Net Worth Inversion achieved! You have eliminated more than 50% of your total obligations.',
+      icon: '👑',
     ),
   ];
 

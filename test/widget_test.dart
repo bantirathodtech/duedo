@@ -9,7 +9,6 @@ import 'package:duedo/services/notification_service.dart';
 import 'package:duedo/services/vault_service.dart';
 import 'package:duedo/services/sms_sync_service.dart';
 import 'package:duedo/services/database.dart';
-import 'package:duedo/ui/screens/ad_gate_screen.dart';
 import 'package:duedo/services/supabase_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -118,39 +117,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // DIAGNOSTIC 1: Check for loading indicators
-    final loadingFinder = find.byType(CircularProgressIndicator);
-    if (loadingFinder.evaluate().isNotEmpty) {
-      print('DEBUG: App is STUCK in a loading state.');
-    }
-
-    // DIAGNOSTIC 2: Check for AdGateScreen
-    final adGateFinder = find.byType(AdGateScreen);
-    if (adGateFinder.evaluate().isNotEmpty) {
-      print('DEBUG: App is STUCK on AdGateScreen.');
-    }
-
-    // DIAGNOSTIC 3: Check for VaultGate locking UI
-    final lockFinder = find.byIcon(Icons.lock_person_rounded);
-    if (lockFinder.evaluate().isNotEmpty) {
-      print('DEBUG: App is STUCK on VaultGate lock screen.');
-    }
-
     // Verify core screen is mounted
     final totalCommitmentFinder = find.text('TOTAL COMMITMENT', skipOffstage: false);
-    if (totalCommitmentFinder.evaluate().isEmpty) {
-      print('DEBUG: TOTAL COMMITMENT not found.');
-      print('DEBUG: Dumping all Text widgets:');
-      for (final element in find.byType(Text, skipOffstage: false).evaluate()) {
-        final text = (element.widget as Text).data;
-        if (text != null) {
-          print('  - "$text"');
-        }
-      }
-      print('DEBUG: Checking for AppInitializer or CircularProgressIndicator:');
-      print('  CircularProgressIndicator count: ${find.byType(CircularProgressIndicator).evaluate().length}');
-    }
-    
     expect(totalCommitmentFinder, findsOneWidget);
   });
 }

@@ -7,7 +7,7 @@ import '../../repositories/obligation_repository.dart';
 import '../../services/supabase_service.dart';
 import '../../services/sms_sync_service.dart';
 import '../../services/background_service.dart';
-import '../../services/ad_service.dart';
+import '../../services/ads/ad_service.dart';
 import '../../services/audit_log.dart';
 import '../../services/logger_service.dart';
 import '../../services/notification_service.dart';

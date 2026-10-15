@@ -10,7 +10,8 @@ import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import '../../services/ad_service.dart';
+import '../../services/ads/ad_service.dart';
+import '../../services/statement_parser_service.dart';
 
 class AddObligationScreen extends ConsumerStatefulWidget {
   final Obligation? obligation;
@@ -25,6 +26,14 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
   InterstitialAd? _interstitialAd;
   bool _isAdLoaded = false;
   
+  // Controllers for zero-typing programmatic auto-fill
+  late TextEditingController _titleController;
+  late TextEditingController _amountController;
+  late TextEditingController _totalBalanceController;
+  late TextEditingController _interestRateController;
+  late TextEditingController _durationController;
+  late TextEditingController _notesController;
+
   // Form Fields
   late String _title;
   late double _amount;
@@ -54,11 +63,14 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
     _totalBalance = o?.totalBalance ?? 0;
     _interestRate = o?.interestRate ?? 0;
     _notes = o?.notes;
-    // If date is far future or same as created but intended as no-date
-    // For now, we'll just track the toggle state. 
-    // If it's a one-time with no specific deadline, users can toggle this.
-    // For now, we'll just track the toggle state. 
-    // If it's a one-time with no specific deadline, users can toggle this.
+
+    _titleController = TextEditingController(text: _title);
+    _amountController = TextEditingController(text: _amount > 0 ? _amount.toStringAsFixed(0) : '');
+    _totalBalanceController = TextEditingController(text: _totalBalance > 0 ? _totalBalance.toStringAsFixed(0) : '0');
+    _interestRateController = TextEditingController(text: _interestRate > 0 ? _interestRate.toString() : '0');
+    _durationController = TextEditingController(text: _emiDuration != null ? _emiDuration.toString() : '');
+    _notesController = TextEditingController(text: _notes ?? '');
+
     _loadInterstitialAd();
   }
 
@@ -81,6 +93,12 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
 
   @override
   void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    _totalBalanceController.dispose();
+    _interestRateController.dispose();
+    _durationController.dispose();
+    _notesController.dispose();
     _interstitialAd?.dispose();
     super.dispose();
   }
@@ -120,6 +138,10 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (widget.obligation == null) ...[
+                      _buildSmartParserBanner(),
+                      const SizedBox(height: 20),
+                    ],
                     _StaggeredEntry(
                       delay: 0,
                       child: _buildSectionCard(
@@ -128,7 +150,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                           children: [
                             _buildTypeSelector(),
                             const SizedBox(height: 24),
-                            _buildTextField('Title', (v) => _title = v, icon: Icons.title_rounded),
+                            _buildTextField('Title', (v) => _title = v, icon: Icons.title_rounded, controller: _titleController),
                             const SizedBox(height: 16),
                             _buildAmountField(),
                           ],
@@ -168,6 +190,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                                 (v) => _emiDuration = int.tryParse(v), 
                                 keyboardType: TextInputType.number,
                                 icon: Icons.calendar_month_rounded,
+                                controller: _durationController,
                               ),
                               const SizedBox(height: 16),
                               _buildPaymentWindowSlider(),
@@ -180,8 +203,8 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                                     'Total Balance', 
                                     (v) => _totalBalance = double.tryParse(v) ?? 0, 
                                     keyboardType: TextInputType.number,
-                                    initialValue: _totalBalance.toString(),
                                     icon: Icons.account_balance_wallet_rounded,
+                                    controller: _totalBalanceController,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -190,8 +213,8 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                                     'Interest Rate (%)', 
                                     (v) => _interestRate = double.tryParse(v) ?? 0, 
                                     keyboardType: TextInputType.number,
-                                    initialValue: _interestRate.toString(),
                                     icon: Icons.percent_rounded,
+                                    controller: _interestRateController,
                                   ),
                                 ),
                               ],
@@ -210,6 +233,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
                           (v) => _notes = v, 
                           maxLines: 3, 
                           icon: Icons.notes_rounded,
+                          controller: _notesController,
                         ),
                       ),
                     ),
@@ -427,9 +451,18 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
     );
   }
 
-  Widget _buildTextField(String label, Function(String) onChanged, {TextInputType? keyboardType, int maxLines = 1, IconData? icon, String? initialValue}) {
+  Widget _buildTextField(
+    String label, 
+    Function(String) onChanged, {
+    TextInputType? keyboardType, 
+    int maxLines = 1, 
+    IconData? icon, 
+    String? initialValue,
+    TextEditingController? controller,
+  }) {
     return TextFormField(
-      initialValue: initialValue ?? (label == 'Title' ? _title : (label == 'Category' ? _category : _notes)),
+      controller: controller,
+      initialValue: controller == null ? (initialValue ?? (label == 'Title' ? _title : (label == 'Category' ? _category : _notes))) : null,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: icon != null ? Icon(icon) : null,
@@ -441,7 +474,7 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
       maxLines: maxLines,
       onChanged: onChanged,
       validator: (v) {
-        if (label.contains('(Optional)')) return null;
+        if (label.contains('(Optional)') || label.contains('Interest') || label.contains('Balance') || label.contains('Duration')) return null;
         return v == null || v.isEmpty ? 'Required' : null;
       },
     );
@@ -449,9 +482,9 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
 
   Widget _buildAmountField() {
     return TextFormField(
-      initialValue: widget.obligation != null ? _amount.toString() : null,
+      controller: _amountController,
       decoration: InputDecoration(
-        labelText: 'Amount',
+        labelText: _type == ObligationType.emi ? 'Monthly EMI Amount' : 'Amount',
         prefixIcon: const Icon(Icons.currency_rupee),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         filled: true,
@@ -530,7 +563,321 @@ class _AddObligationScreenState extends ConsumerState<AddObligationScreen> {
     );
   }
 
+  Widget _buildSmartParserBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primary.withValues(alpha: 0.15),
+            const Color(0xFF06B6D4).withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.auto_awesome_rounded, color: AppTheme.primary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '⚡ 1-TAP ZERO-TYPING IMPORT',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    Text(
+                      'Paste sanction letter, statement or SMS to auto-fill',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.document_scanner_rounded, size: 16),
+              label: const Text('Auto-Detect from Statement / SMS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.4)),
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              onPressed: _showSmartParserModal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSmartParserModal() {
+    final textController = TextEditingController();
+    ParsedStatementResult? parsed;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              left: 20,
+              right: 20,
+              top: 24,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.auto_awesome_rounded, color: AppTheme.primary, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Statement & SMS Parser',
+                            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Paste raw text from your loan sanction letter, bank credit card statement, or deduction SMS.',
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(Icons.description_outlined, size: 14, color: AppTheme.primary),
+                        label: const Text('Sample HDFC Sanction Letter', style: TextStyle(fontSize: 11)),
+                        backgroundColor: Colors.white.withValues(alpha: 0.05),
+                        onPressed: () {
+                          HapticService.selection();
+                          textController.text =
+                              'Sanction Letter: HDFC Bank Personal Loan. Sanctioned Amount: Rs. 5,00,000. Monthly EMI: Rs. 13,200. Interest Rate: 10.75% p.a. Tenure: 48 months. Due on: 5th of every month.';
+                          final res = ref.read(statementParserServiceProvider).parseText(textController.text);
+                          setModalState(() => parsed = res);
+                        },
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.credit_card_outlined, size: 14, color: Color(0xFF38BDF8)),
+                        label: const Text('Sample Credit Card Statement', style: TextStyle(fontSize: 11)),
+                        backgroundColor: Colors.white.withValues(alpha: 0.05),
+                        onPressed: () {
+                          HapticService.selection();
+                          textController.text =
+                              'ICICI Bank Credit Card Statement for Oct 2026. Total Amount Due: ₹ 45,800. Minimum Amount Due: ₹ 2,290. Payment Due Date: on 22nd.';
+                          final res = ref.read(statementParserServiceProvider).parseText(textController.text);
+                          setModalState(() => parsed = res);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: textController,
+                    maxLines: 4,
+                    style: const TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'Paste statement text or loan agreement here...',
+                      hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      contentPadding: const EdgeInsets.all(14),
+                    ),
+                    onChanged: (text) {
+                      final res = ref.read(statementParserServiceProvider).parseText(text);
+                      setModalState(() => parsed = res);
+                    },
+                  ),
+                  if (parsed != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'DETECTED FINANCIAL ASSET',
+                                style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.primary,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.success.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${(parsed!.confidenceScore * 100).toInt()}% Match',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.success,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            parsed!.title,
+                            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('BALANCE / TOTAL', style: TextStyle(fontSize: 9, color: Colors.grey.shade400)),
+                                    Text('₹ ${parsed!.totalBalance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white)),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('MONTHLY EMI', style: TextStyle(fontSize: 9, color: Colors.grey.shade400)),
+                                    Text('₹ ${parsed!.monthlyAmount.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13, color: AppTheme.primary)),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('INTEREST', style: TextStyle(fontSize: 9, color: Colors.grey.shade400)),
+                                    Text('${parsed!.interestRate}% p.a.', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                        label: const Text('Apply & Auto-Fill Form', style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          HapticService.success();
+                          final p = parsed!;
+                          _title = p.title;
+                          _titleController.text = p.title;
+                          _amount = p.monthlyAmount;
+                          _amountController.text = p.monthlyAmount.toStringAsFixed(0);
+                          _totalBalance = p.totalBalance;
+                          _totalBalanceController.text = p.totalBalance.toStringAsFixed(0);
+                          _interestRate = p.interestRate;
+                          _interestRateController.text = p.interestRate.toString();
+                          if (p.emiDurationMonths != null) {
+                            _emiDuration = p.emiDurationMonths;
+                            _durationController.text = p.emiDurationMonths.toString();
+                          }
+                          _type = p.type;
+                          _priority = p.priority;
+                          _category = p.category;
+                          if (p.dueDate != null) {
+                            _startDate = p.dueDate!;
+                          }
+                          setState(() {});
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Form auto-filled from statement! ✨'),
+                              backgroundColor: AppTheme.success,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _submit() async {
+    _title = _titleController.text.trim();
+    _amount = double.tryParse(_amountController.text.trim()) ?? 0;
+    _totalBalance = double.tryParse(_totalBalanceController.text.trim()) ?? 0;
+    _interestRate = double.tryParse(_interestRateController.text.trim()) ?? 0;
+    _emiDuration = int.tryParse(_durationController.text.trim());
+    _notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+
     if (_formKey.currentState!.validate()) {
       if (widget.obligation == null) {
         final companion = ObligationsCompanion.insert(

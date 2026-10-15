@@ -129,7 +129,7 @@ void main() {
   group('Record Payment and Streak', () {
     test('recordPayment should trigger repository and handle streak', () async {
       final debt = createObligation();
-      final settings = UserSetting(
+      const settings = UserSetting(
         id: 1,
         monthlyIncome: 10000.0,
         currency: 'USD',

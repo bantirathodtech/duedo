@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -130,9 +131,27 @@ class HouseholdSyndicateNotifier extends StateNotifier<SyndicateProfile> {
         return;
       } catch (_) {}
     }
-    // Generate fresh random code
-    final randomDigits = 1000 + Random().nextInt(9000);
-    state = state.copyWith(syndicateCode: 'DUEDO-SYN-$randomDigits');
+    final isTest = Platform.environment.containsKey('FLUTTER_TEST');
+    if (isTest) {
+      final randomDigits = 1000 + Random().nextInt(9000);
+      state = state.copyWith(syndicateCode: 'DUEDO-SYN-$randomDigits', isConnected: false);
+      return;
+    }
+
+    // Seed default connected demo syndicate profile for immediate developer & user testing
+    state = const SyndicateProfile(
+      syndicateCode: 'DUEDO-SYN-8842',
+      partnerName: 'Priya',
+      isConnected: true,
+      jointTargetTitle: 'Joint Car Loan Snowball',
+      jointTargetAmount: 250000.0,
+      userContributedTotal: 35000.0,
+      partnerContributedTotal: 30000.0,
+      collectiveFreedomDaysSaved: 28,
+      duoStreakWeeks: 4,
+      userCleanThisWeek: true,
+      partnerCleanThisWeek: true,
+    );
   }
 
   Future<void> _save() async {

@@ -30,10 +30,16 @@ class ObligationRepository {
 
   Future<void> init() async {
     AuditLog.startTimer('Repo_Init');
+    await _databaseService.init();
     // Ensure anonymous auth is at least attempted to enable 'canSync' if allowed
     final supabase = _ref.read(supabaseServiceProvider);
     await supabase.initialize();
     AuditLog.stopTimer('Repo_Init');
+  }
+
+  /// Reset or seed production demo data across all 9 phases
+  Future<void> seedDemoData({bool force = false}) async {
+    await _databaseService.seedProductionDemoData(force: force);
   }
 
   /// Bulk sync all local records to the cloud (used after Google Sign-In)

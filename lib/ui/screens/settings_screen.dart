@@ -329,6 +329,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _buildGlanceWidgetSection(),
                   const SizedBox(height: 24),
                   _buildCloudSyncSection(),
+                  const SizedBox(height: 24),
+                  _buildDemoDataSection(),
                   const SizedBox(height: 60),
                   _buildSaveButton(),
                 ],
@@ -1328,6 +1330,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDemoDataSection() {
+    return _buildSectionCard(
+      title: '9-Phase Production Demo Data',
+      description: 'Instantly seed realistic high-production dummy data across all 9 phases (Debts, Slain Trophies, Subscriptions, Household Syndicate, Impulse Vault, and Sovereign Vault) to verify production UI/UX.',
+      child: Column(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () async {
+              HapticService.dopamineCascade();
+              final repo = ref.read(obligationRepositoryProvider);
+              await repo.seedDemoData(force: true);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('⚡ All 9 Phases Seeded with Production Demo Data!'),
+                    backgroundColor: Color(0xFF00D09C),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                setState(() {});
+              }
+            },
+            icon: const Icon(Icons.bolt, color: Colors.black),
+            label: Text(
+              'Reload 9-Phase Production Demo Data',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00D09C),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
         ],
       ),
     );

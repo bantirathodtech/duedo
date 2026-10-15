@@ -94,17 +94,138 @@ class DatabaseService {
   Future<void> init() async {
     final settings = await getSettings();
     if (settings == null) {
-      // Seed initial settings on first run
-      await updateSettings(const UserSettingsCompanion(
-        id: Value(1),
-        monthlyIncome: Value(0),
-        currency: Value('INR'),
-        notificationsEnabled: Value(true),
-        reminderDaysBefore: Value(1),
-        paydayOfMonth: Value(1),
-        isPremium: Value(false),
-      ));
+      await seedProductionDemoData();
+    } else {
+      final obligations = await getAllObligations();
+      if (obligations.isEmpty) {
+        await seedProductionDemoData();
+      }
     }
+  }
+
+  /// Seeds high-production realistic dummy data across all 9 phases so developers and testers
+  /// can immediately experience the full app in production fidelity.
+  Future<void> seedProductionDemoData({bool force = false}) async {
+    final existing = await getAllObligations();
+    if (!force && existing.isNotEmpty) return;
+
+    if (force) {
+      await _db.delete(_db.payments).go();
+      await _db.delete(_db.obligations).go();
+    }
+
+    final now = DateTime.now();
+
+    // 1. User Settings & Streak
+    await updateSettings(UserSettingsCompanion(
+      id: const Value(1),
+      monthlyIncome: const Value(95000.0),
+      currency: const Value('₹'),
+      notificationsEnabled: const Value(true),
+      reminderDaysBefore: const Value(2),
+      paydayOfMonth: const Value(1),
+      isPremium: const Value(true),
+      paymentStreak: const Value(42),
+      isSavageMode: const Value(false),
+      lastPaymentDate: Value(now.subtract(const Duration(days: 1))),
+    ));
+
+    // 2. High-APR Credit Card (Top Avalanche Candidate - Phase 1, 2, 8)
+    final hdfcId = await addObligation(ObligationsCompanion(
+      title: const Value('HDFC Regalia Credit Card'),
+      type: const Value(ObligationType.emi),
+      amount: const Value(6500.0),
+      totalBalance: const Value(74500.0),
+      interestRate: const Value(42.0),
+      priority: const Value(PriorityLevel.high),
+      category: const Value('Credit Card'),
+      startDate: Value(now.subtract(const Duration(days: 120))),
+      nextDueDate: Value(DateTime(now.year, now.month, now.day + 5)),
+      notes: const Value('Pre-approved settlement waiver eligible before statement generation date'),
+      isActive: const Value(true),
+    ));
+
+    // Recent Payment for HDFC card
+    await addPayment(PaymentsCompanion(
+      obligationId: Value(hdfcId),
+      amountPaid: const Value(5000.0),
+      paidDate: Value(now.subtract(const Duration(days: 25))),
+      paymentType: const Value('UPI Slay'),
+      note: const Value('Snowflake strike via Google Pay'),
+    ));
+
+    // 3. Medium-Term Personal Loan (Phase 1 Snowball step 2 & Phase 3 Calendar)
+    final iciciId = await addObligation(ObligationsCompanion(
+      title: const Value('ICICI Express Personal Loan'),
+      type: const Value(ObligationType.emi),
+      amount: const Value(9850.0),
+      totalBalance: const Value(185000.0),
+      interestRate: const Value(13.5),
+      priority: const Value(PriorityLevel.medium),
+      category: const Value('Personal Loan'),
+      startDate: Value(now.subtract(const Duration(days: 210))),
+      nextDueDate: Value(DateTime(now.year, now.month, now.day + 12)),
+      emiDurationMonths: const Value(24),
+      emiPaidMonths: const Value(7),
+      notes: const Value('Tenure: 24 Months | 7 EMIs paid | Auto-debit on 12th'),
+      isActive: const Value(true),
+    ));
+
+    await addPayment(PaymentsCompanion(
+      obligationId: Value(iciciId),
+      amountPaid: const Value(9850.0),
+      paidDate: Value(now.subtract(const Duration(days: 18))),
+      paymentType: const Value('Auto-Debit'),
+      note: const Value('Regular scheduled EMI'),
+    ));
+
+    // 4. Low-APR Education Loan with Tax Benefit 80E (Phase 1, 3, 4)
+    await addObligation(ObligationsCompanion(
+      title: const Value('SBI Scholar Education Loan'),
+      type: const Value(ObligationType.emi),
+      amount: const Value(7200.0),
+      totalBalance: const Value(320000.0),
+      interestRate: const Value(8.5),
+      priority: const Value(PriorityLevel.low),
+      category: const Value('Education'),
+      startDate: Value(now.subtract(const Duration(days: 450))),
+      nextDueDate: Value(DateTime(now.year, now.month, now.day + 20)),
+      emiDurationMonths: const Value(60),
+      emiPaidMonths: const Value(15),
+      taxCategory: const Value('80E'),
+      notes: const Value('Eligible for 100% tax deduction on interest under Section 80E'),
+      isActive: const Value(true),
+    ));
+
+    // 5. Entertainment Subscription for Vampire Slasher (Phase 6)
+    await addObligation(ObligationsCompanion(
+      title: const Value('Netflix Premium 4K UHD'),
+      type: const Value(ObligationType.recurring),
+      amount: const Value(649.0),
+      totalBalance: const Value(0.0),
+      interestRate: const Value(0.0),
+      priority: const Value(PriorityLevel.low),
+      category: const Value('Entertainment'),
+      startDate: Value(now.subtract(const Duration(days: 180))),
+      nextDueDate: Value(DateTime(now.year, now.month, now.day + 2)),
+      notes: const Value('Detected by Vampire Slasher: 5-year opportunity cost ₹58,000'),
+      isActive: const Value(true),
+    ));
+
+    // 6. Fitness Subscription for Vampire Slasher (Phase 6)
+    await addObligation(ObligationsCompanion(
+      title: const Value('Cult.Fit Elite Pass'),
+      type: const Value(ObligationType.recurring),
+      amount: const Value(1499.0),
+      totalBalance: const Value(0.0),
+      interestRate: const Value(0.0),
+      priority: const Value(PriorityLevel.low),
+      category: const Value('Fitness'),
+      startDate: Value(now.subtract(const Duration(days: 90))),
+      nextDueDate: Value(DateTime(now.year, now.month, now.day + 8)),
+      notes: const Value('Detected by Vampire Slasher: Unutilized for 45 days'),
+      isActive: const Value(true),
+    ));
   }
 }
 

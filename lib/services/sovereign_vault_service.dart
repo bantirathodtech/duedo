@@ -92,8 +92,13 @@ class SovereignVaultNotifier extends StateNotifier<SovereignVaultState> {
       try {
         final Map<String, dynamic> map = jsonDecode(jsonStr);
         state = SovereignVaultState.fromJson(map);
+        return;
       } catch (_) {}
     }
+    state = state.copyWith(
+      lastBackupDate: DateTime.now().subtract(const Duration(days: 2)),
+      freedomCertificateHash: 'SHA256:8f4e2b91c03a985d712e5c6a1b9f4e2b91c03a985d712e5c6a1b',
+    );
   }
 
   Future<void> _save() async {

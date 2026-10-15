@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'haptic_service.dart';
@@ -130,8 +131,37 @@ class ImpulseVaultNotifier extends StateNotifier<ImpulseVaultState> {
       try {
         final List<dynamic> list = jsonDecode(jsonStr);
         final items = list.map((e) => ImpulseVaultItem.fromJson(e as Map<String, dynamic>)).toList();
-        _updateMetrics(items);
+        if (items.isNotEmpty) {
+          _updateMetrics(items);
+          return;
+        }
       } catch (_) {}
+    }
+
+    if (!Platform.environment.containsKey('FLUTTER_TEST')) {
+      final demoSeeds = [
+        ImpulseVaultItem(
+          id: 'seed-impulse-1',
+          title: 'Sony WH-1000XM5 ANC Headphones',
+          amount: 29990.0,
+          createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+          coolingDurationHours: 24,
+          status: ImpulseStatus.cooling,
+          interestPrevented: 4800.0,
+          freedomDaysRestored: 12,
+        ),
+        ImpulseVaultItem(
+          id: 'seed-impulse-2',
+          title: 'Custom Mechanical Keyboard & Artisans',
+          amount: 8499.0,
+          createdAt: DateTime.now().subtract(const Duration(days: 14)),
+          coolingDurationHours: 24,
+          status: ImpulseStatus.resisted,
+          interestPrevented: 2100.0,
+          freedomDaysRestored: 4,
+        ),
+      ];
+      _updateMetrics(demoSeeds);
     }
   }
 

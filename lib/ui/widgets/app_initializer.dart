@@ -74,7 +74,8 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       audit.perf('Phase_1_Core', category: LogCategory.performance);
       
       audit.perf('Repo_Init', category: LogCategory.performance);
-      ref.read(obligationRepositoryProvider);
+      final repo = ref.read(obligationRepositoryProvider);
+      await repo.init();
       await Future.delayed(const Duration(milliseconds: 100)); // Yield for DB open
       audit.perfComplete('Repo_Init', category: LogCategory.performance);
 

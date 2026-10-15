@@ -203,7 +203,7 @@ class _AdGateScreenState extends State<AdGateScreen> {
                           child: Center(
                             child: ClipOval(
                               child: Image.asset(
-                                'assets/app_logo.png',
+                                'assets/brand/primary_mark.png',
                                 width: 110,
                                 height: 110,
                                 fit: BoxFit.cover,

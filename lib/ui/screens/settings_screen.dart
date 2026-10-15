@@ -331,8 +331,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _buildCloudSyncSection(),
                   const SizedBox(height: 24),
                   _buildDemoDataSection(),
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 48),
                   _buildSaveButton(),
+                  const SizedBox(height: 36),
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'assets/brand/horizontal_lockup.png',
+                          height: 36,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Financial Freedom OS • v2.4.0',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

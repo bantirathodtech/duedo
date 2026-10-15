@@ -63,14 +63,25 @@ class QuickStrikeModal extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00D09C), Color(0xFF0284C7)],
-                  ),
                   borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00D09C).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: const Text('⚡', style: TextStyle(fontSize: 20)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.asset(
+                    'assets/brand/app_icon.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

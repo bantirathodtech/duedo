@@ -328,12 +328,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primary,
-                          shape: BoxShape.circle,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.asset(
+                          'assets/brand/primary_mark.png',
+                          width: 14,
+                          height: 14,
+                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(width: 6),

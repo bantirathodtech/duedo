@@ -93,13 +93,9 @@ class DatabaseService {
 
   Future<void> init() async {
     final settings = await getSettings();
-    if (settings == null) {
-      await seedProductionDemoData();
-    } else {
-      final obligations = await getAllObligations();
-      if (obligations.isEmpty) {
-        await seedProductionDemoData();
-      }
+    final obligations = await getAllObligations();
+    if (settings == null || obligations.isEmpty || settings.monthlyIncome == 0) {
+      await seedProductionDemoData(force: obligations.isEmpty);
     }
   }
 
@@ -224,6 +220,21 @@ class DatabaseService {
       startDate: Value(now.subtract(const Duration(days: 90))),
       nextDueDate: Value(DateTime(now.year, now.month, now.day + 8)),
       notes: const Value('Detected by Vampire Slasher: Unutilized for 45 days'),
+      isActive: const Value(true),
+    ));
+
+    // 7. One-Time Hand-Loan (Phase 1 & 9)
+    await addObligation(ObligationsCompanion(
+      title: const Value('Apple MacBook Pro Hand-Loan'),
+      type: const Value(ObligationType.oneTime),
+      amount: const Value(45000.0),
+      totalBalance: const Value(45000.0),
+      interestRate: const Value(0.0),
+      priority: const Value(PriorityLevel.medium),
+      category: const Value('Technology'),
+      startDate: Value(now.subtract(const Duration(days: 30))),
+      nextDueDate: Value(DateTime(now.year, now.month, now.day + 15)),
+      notes: const Value('Zero-interest friendly loan for developer workstation upgrade'),
       isActive: const Value(true),
     ));
   }

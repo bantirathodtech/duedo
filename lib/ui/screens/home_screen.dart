@@ -2242,15 +2242,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   List<Obligation> _getFilteredObligations(HomeViewModel viewModel) {
     final sorted = viewModel.sortedObligations;
     if (_selectedTab == 0) {
-      return sorted.where((o) => o.type == ObligationType.oneTime).toList();
+      return sorted.where((o) => o.type != ObligationType.recurring).toList();
     } else {
-      return sorted.where((o) => o.type != ObligationType.oneTime).toList();
+      return sorted.where((o) => o.type == ObligationType.recurring).toList();
     }
   }
 
   Widget _buildListHeader(HomeViewModel viewModel, bool isDark) {
-    final oneTimeCount = viewModel.sortedObligations.where((o) => o.type == ObligationType.oneTime).length;
-    final recurringCount = viewModel.sortedObligations.where((o) => o.type != ObligationType.oneTime).length;
+    final debtsCount = viewModel.sortedObligations.where((o) => o.type != ObligationType.recurring).length;
+    final recurringCount = viewModel.sortedObligations.where((o) => o.type == ObligationType.recurring).length;
 
     return Column(
       children: [
@@ -2282,7 +2282,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '${_selectedTab == 0 ? oneTimeCount : recurringCount}',
+                      '${_selectedTab == 0 ? debtsCount : recurringCount}',
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -2330,7 +2330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           ),
           child: Row(
             children: [
-              Expanded(child: _buildTabItem(0, 'DEBTS & GOALS ($oneTimeCount)', Icons.track_changes_rounded, isDark)),
+              Expanded(child: _buildTabItem(0, 'DEBTS & EMIS ($debtsCount)', Icons.track_changes_rounded, isDark)),
               Expanded(child: _buildTabItem(1, 'MONTHLY PAYS ($recurringCount)', Icons.repeat_rounded, isDark)),
             ],
           ),

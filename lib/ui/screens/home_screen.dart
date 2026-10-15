@@ -24,6 +24,8 @@ import '../widgets/daily_freedom_rings_widget.dart';
 import '../widgets/impulse_vault_card.dart';
 import '../widgets/safe_to_spend_dial_card.dart';
 import '../widgets/payday_blitz_modal.dart';
+import '../../services/freedom_league_service.dart';
+import 'freedom_league_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -343,6 +345,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildStreakBadge(state.settings?.paymentStreak ?? 0, isDark),
                 const SizedBox(width: 8),
                 _buildPaydayBlitzPill(viewModel, state, isDark),
+                const SizedBox(width: 8),
+                _buildLeagueBadge(isDark),
               ],
             ),
           ),
@@ -1940,6 +1944,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
                 color: accentColor,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeagueBadge(bool isDark) {
+    final league = ref.watch(freedomLeagueProvider);
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FreedomLeagueScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFD946EF).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFD946EF).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(league.currentTier.trophyEmoji, style: const TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'RANK #${league.userRank}',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFD946EF),
                 letterSpacing: 0.6,
               ),
             ),

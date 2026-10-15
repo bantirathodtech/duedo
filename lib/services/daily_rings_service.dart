@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'haptic_service.dart';
+import 'glance_widget_service.dart';
 
 final dailyRingsServiceProvider = StateNotifierProvider<DailyRingsNotifier, DailyRingsState>((ref) {
   return DailyRingsNotifier();
@@ -213,5 +214,11 @@ class DailyRingsNotifier extends StateNotifier<DailyRingsState> {
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefKey, jsonEncode(state.toJson()));
+    await GlanceWidgetService.syncGlanceData(
+      safeToSpend: prefs.getDouble('duedo_glance_safe_to_spend') ?? 1250.0,
+      cleanDay: state.cleanDayCompleted,
+      streak: state.currentStreak,
+      ringsClosed: state.ringsClosedToday,
+    );
   }
 }

@@ -14,6 +14,11 @@ import '../../services/supabase_service.dart';
 import '../../services/freedom_pact_service.dart';
 import '../../services/execudo_bridge_service.dart';
 import 'freedom_pact_screen.dart';
+import 'package:intl/intl.dart';
+import 'freedom_league_screen.dart';
+import '../widgets/glance_widget_preview.dart';
+import '../../services/financial_logic_service.dart';
+import '../../services/freedom_league_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -319,6 +324,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 24),
                   _buildPersonaVoiceSection(),
                   const SizedBox(height: 24),
+                  _buildFreedomLeagueSection(),
+                  const SizedBox(height: 24),
+                  _buildGlanceWidgetSection(),
+                  const SizedBox(height: 24),
                   _buildCloudSyncSection(),
                   const SizedBox(height: 60),
                   _buildSaveButton(),
@@ -592,6 +601,137 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFreedomLeagueSection() {
+    final league = ref.watch(freedomLeagueProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return _buildSectionCard(
+      title: '🏆 Freedom Arena (Leagues)',
+      description: 'Anonymous Duolingo-style weekly discipline cohorts',
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF161928) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD946EF).withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text(league.currentTier.trophyEmoji, style: const TextStyle(fontSize: 24)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${league.currentTier.displayName} • Rank #${league.userRank}',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 15),
+                      ),
+                      Text(
+                        '${league.userPoints} Discipline Points • ${league.daysRemainingInSeason} days left in season',
+                        style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.leaderboard_rounded, size: 16),
+                label: const Text('Enter Freedom Arena', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD946EF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  HapticService.selection();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FreedomLeagueScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlanceWidgetSection() {
+    final state = ref.watch(homeViewModelProvider);
+    final currency = state.settings?.currency ?? '₹';
+    final format = NumberFormat.simpleCurrency(name: currency, decimalDigits: 0);
+    final logic = FinancialLogicService();
+    final safeToSpend = logic.calculateSafeToSpend(
+      obligations: state.obligations,
+      monthlyIncome: state.settings?.monthlyIncome ?? 50000.0,
+    );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return _buildSectionCard(
+      title: '📱 Ambient Lock-Screen Glance',
+      description: 'Pin live Safe-to-Spend & rings on your phone lock screen',
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.widgets_rounded, color: Color(0xFF3B82F6), size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Live Hardware Layer Glance',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 14),
+                    ),
+                    Text(
+                      'Ambient updates with zero manual app opens',
+                      style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.phone_android_rounded, size: 16),
+              label: const Text('Preview & Sync Lock Screen', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF3B82F6),
+                side: const BorderSide(color: Color(0xFF3B82F6), width: 0.8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                GlanceWidgetPreviewModal.show(
+                  context,
+                  safeToSpendAmount: safeToSpend.dailyAmount,
+                  cleanDayCompleted: true,
+                  streakDays: state.settings?.paymentStreak ?? 5,
+                  ringsClosed: false,
+                  currencyFormat: format,
+                  isDark: isDark,
+                );
+              },
+            ),
           ),
         ],
       ),

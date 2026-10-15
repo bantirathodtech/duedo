@@ -13,6 +13,9 @@ import '../../services/haptic_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../services/ads/ad_service.dart';
 import '../widgets/freedom_tape_modal.dart';
+import '../widgets/upi_slay_modal.dart';
+import '../widgets/debt_negotiation_modal.dart';
+import '../../services/daily_rings_service.dart';
 
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
@@ -126,7 +129,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
                   _buildSectionHeader('High-APR Arbitrage Radar'),
                   const SizedBox(height: 16),
-                  _buildRefinanceArbitrageSection(viewModel, currencyFormat, context),
+                  _buildRefinanceArbitrageSection(state, viewModel, currencyFormat, context),
                   const SizedBox(height: 32),
 
                   _buildSectionHeader('👻 Ghost Bill Hunter'),
@@ -1211,7 +1214,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     );
   }
 
-  Widget _buildRefinanceArbitrageSection(HomeViewModel viewModel, NumberFormat format, BuildContext context) {
+  Widget _buildRefinanceArbitrageSection(HomeState state, HomeViewModel viewModel, NumberFormat format, BuildContext context) {
     final opportunities = viewModel.arbitrageOpportunities;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -1463,6 +1466,61 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.bolt_rounded, size: 14),
+                        label: const Text('1-Tap UPI Slay', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: () {
+                          UpiSlayModal.show(
+                            context,
+                            obligation: opp.obligation,
+                            currencyFormat: format,
+                            isDark: isDark,
+                            onPaymentExecuted: (amount) async {
+                              await ref.read(dailyRingsServiceProvider.notifier).recordSnowflake();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.record_voice_over_rounded, size: 14),
+                        label: const Text('AI Call Script', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFB7185),
+                          side: const BorderSide(color: Color(0xFFE11D48), width: 0.8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: () {
+                          DebtNegotiationModal.show(
+                            context,
+                            obligation: opp.obligation,
+                            paymentStreak: state.settings?.paymentStreak ?? 0,
+                            isDark: isDark,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

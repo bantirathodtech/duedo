@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../services/financial_logic_service.dart';
 import '../../services/haptic_service.dart';
 import '../theme/app_theme.dart';
+import 'glance_widget_preview.dart';
 
 class SafeToSpendDialCard extends StatelessWidget {
   final SafeToSpendMetrics metrics;
@@ -113,18 +114,46 @@ class SafeToSpendDialCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
-                ),
-                onPressed: () {
-                  HapticService.selection();
-                  _showExplanationModal(context, isDark);
-                },
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Lock Screen Widget',
+                    icon: Icon(
+                      Icons.widgets_outlined,
+                      size: 16,
+                      color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                    ),
+                    onPressed: () {
+                      HapticService.selection();
+                      GlanceWidgetPreviewModal.show(
+                        context,
+                        safeToSpendAmount: metrics.dailyAmount,
+                        cleanDayCompleted: true,
+                        streakDays: 5,
+                        ringsClosed: false,
+                        currencyFormat: format,
+                        isDark: isDark,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                    ),
+                    onPressed: () {
+                      HapticService.selection();
+                      _showExplanationModal(context, isDark);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

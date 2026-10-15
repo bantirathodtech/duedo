@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../services/financial_logic_service.dart';
 import '../../services/haptic_service.dart';
 import '../theme/app_theme.dart';
+import 'upi_slay_modal.dart';
 
 class PaydayBlitzModal extends StatefulWidget {
   final PaydayBlitzPlan plan;
@@ -440,6 +441,33 @@ class _PaydayBlitzModalState extends State<PaydayBlitzModal> {
           SizedBox(
             width: double.infinity,
             height: 50,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.bolt_rounded, size: 18),
+              label: Text('Slay ${widget.currencyFormat.format(plan.recommendedSnowflake)} with UPI'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              onPressed: () {
+                UpiSlayModal.show(
+                  context,
+                  obligation: plan.targetDebt!,
+                  currencyFormat: widget.currencyFormat,
+                  isDark: isDark,
+                  onPaymentExecuted: (amount) async {
+                    if (widget.onInjectSnowflake != null) {
+                      await widget.onInjectSnowflake!(amount);
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
             child: ElevatedButton.icon(
               icon: const Icon(Icons.rocket_launch_rounded, size: 16),
               label: Text('Inject ${widget.currencyFormat.format(plan.recommendedSnowflake)} Snowflake & Finish'),

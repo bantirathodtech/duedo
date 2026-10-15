@@ -8,6 +8,7 @@ import '../services/database_service.dart';
 import '../services/financial_logic_service.dart';
 import '../services/supabase_service.dart';
 import '../services/notification_service.dart';
+import '../services/slain_debt_trophy_service.dart';
 import '../models/app_enums.dart';
 
 final obligationRepositoryProvider = Provider((ref) {
@@ -158,6 +159,7 @@ class ObligationRepository {
       await updateObligation(updated);
       
       if (isFinished) {
+        await _ref.read(slainDebtTrophyProvider.notifier).registerSlainDebt(obligation);
         await _notificationService.showEMIVictory(obligation.title);
       }
     } else {
@@ -172,6 +174,11 @@ class ObligationRepository {
       );
 
       await updateObligation(updated);
+
+      if (isFinished) {
+        await _ref.read(slainDebtTrophyProvider.notifier).registerSlainDebt(obligation);
+        await _notificationService.showEMIVictory(obligation.title);
+      }
     }
   }
 

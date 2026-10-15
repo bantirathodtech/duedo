@@ -16,6 +16,8 @@ import '../widgets/freedom_tape_modal.dart';
 import '../widgets/upi_slay_modal.dart';
 import '../widgets/debt_negotiation_modal.dart';
 import '../../services/daily_rings_service.dart';
+import 'freedom_time_machine_screen.dart';
+import 'hall_of_slain_debts_screen.dart';
 
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
@@ -150,6 +152,16 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   _buildSectionHeader('🎬 Monthly Freedom Tape'),
                   const SizedBox(height: 16),
                   _buildFreedomTapeBanner(state, viewModel, currencyFormat, context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('⏳ Freedom Time Machine'),
+                  const SizedBox(height: 16),
+                  _buildFreedomTimeMachineBanner(context),
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader('🏆 Hall of Slain Debts'),
+                  const SizedBox(height: 16),
+                  _buildHallOfSlainDebtsBanner(context),
                   const SizedBox(height: 32),
 
                   _buildSectionHeader('Milestone Achievements'),
@@ -1830,6 +1842,158 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
               onPressed: () {
                 final metrics = viewModel.getFreedomTapeMetrics(12500, state.settings?.paymentStreak ?? 0);
                 FreedomTapeModal.show(context, metrics: metrics, currencyFormat: format, isDark: isDark);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFreedomTimeMachineBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF064E3B), Color(0xFF047857)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF10B981),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.av_timer_rounded, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Freedom Time Machine',
+                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    Text(
+                      'Scrub 36 months into the future to see your debts burn',
+                      style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+              label: Text('Enter Time Machine', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF064E3B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                HapticService.selection();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FreedomTimeMachineScreen()),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHallOfSlainDebtsBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3B1E08), Color(0xFF1F1206)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF59E0B),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.military_tech_rounded, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hall of Slain Debts',
+                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    Text(
+                      'Your permanent physical trophy case of conquered debts',
+                      style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.workspace_premium_rounded, size: 16),
+              label: Text('Visit Trophy Room', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                HapticService.selection();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HallOfSlainDebtsScreen()),
+                );
               },
             ),
           ),

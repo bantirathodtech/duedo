@@ -5,6 +5,8 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'dart:io';
 
 import 'database_service.dart';
+import 'daily_rings_service.dart';
+import 'freedom_league_service.dart';
 import 'haptic_service.dart';
 import 'logger_service.dart';
 
@@ -30,7 +32,11 @@ class NotificationService {
     await _notifications.initialize(
       settings: initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        if (response.actionId == 'settle_now' && response.payload != null) {
+        if (response.actionId == 'clean_day_yes') {
+          await DailyRingsNotifier.markCleanDayFromNotification();
+          await FreedomLeagueNotifier.awardPointsFromNotification(50);
+          LoggerService.log("Notification Action: Clean Day logged from lock screen (+50 pts)", category: LogCategory.financial);
+        } else if (response.actionId == 'settle_now' && response.payload != null) {
           // Parse id from payload 'id=123&title=...'
           final uri = Uri.parse('duedo://notification?${response.payload}');
           final idStr = uri.queryParameters['id'];
@@ -425,6 +431,52 @@ class NotificationService {
 
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id: id);
+  }
+
+  /// Interactive lock-screen evening review notification with inline zero-click actions
+  Future<void> scheduleEveningDailyReview({
+    required double safeToSpend,
+    required String currency,
+  }) async {
+    final now = DateTime.now();
+    var scheduledDate = DateTime(now.year, now.month, now.day, 21, 0); // 9:00 PM
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _safeZonedSchedule(
+      id: 9210, // Constant ID for daily evening review
+      title: 'Duedo Daily Review 🌙',
+      body: 'Safe-to-Spend was $currency${safeToSpend.toStringAsFixed(0)}. Did you keep it clean today?',
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_review',
+          'Daily Evening Review',
+          channelDescription: 'Interactive daily check-in with lock-screen quick actions',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.reminder,
+          actions: [
+            AndroidNotificationAction(
+              'clean_day_yes',
+              '✨ Yes, Clean Day! (+50 pts)',
+              showsUserInterface: false,
+            ),
+            AndroidNotificationAction(
+              'vault_impulse',
+              '🧊 Vault An Impulse',
+              showsUserInterface: true,
+            ),
+          ],
+        ),
+        iOS: DarwinNotificationDetails(
+          categoryIdentifier: 'daily_review_category',
+        ),
+      ),
+      matchDateTimeComponents: DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
   }
 
   /// Internal helper to catch "invalid_sound" errors and retry with default sound

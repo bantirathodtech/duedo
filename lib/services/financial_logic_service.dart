@@ -691,6 +691,80 @@ class FinancialLogicService {
       totalUncovered: deferredObligations.fold(0.0, (sum, d) => sum + d.obligation.amount),
     );
   }
+
+  /// Simulates future timeline state at a specific month offset (0 to 36)
+  FreedomTimeMachineSnapshot calculateTimeMachineSnapshot({
+    required List<Obligation> obligations,
+    required double monthlyIncome,
+    required int monthOffset,
+  }) {
+    final activeDebts = obligations
+        .where((o) => o.isActive && (o.totalBalance > 0 || o.type == ObligationType.emi))
+        .toList();
+
+    double initialTotalDebt = 0.0;
+    for (final d in activeDebts) {
+      initialTotalDebt += (d.totalBalance > 0 ? d.totalBalance : d.amount * 12.0);
+    }
+
+    final remainingDebts = <Obligation>[];
+    final slainDebts = <Obligation>[];
+    double unlockedMonthlyCashflow = 0.0;
+    double remainingDebtBalance = 0.0;
+
+    for (final d in activeDebts) {
+      final balance = d.totalBalance > 0 ? d.totalBalance : (d.amount * 12.0);
+      final monthlyPayment = d.amount > 0 ? d.amount : 1000.0;
+      final monthsToPayoff = (balance / monthlyPayment).ceil().clamp(1, 120);
+
+      if (monthOffset >= monthsToPayoff) {
+        slainDebts.add(d);
+        unlockedMonthlyCashflow += d.amount;
+      } else {
+        remainingDebts.add(d);
+        final remainingBal = (balance - (monthlyPayment * monthOffset)).clamp(0.0, balance);
+        remainingDebtBalance += remainingBal;
+      }
+    }
+
+    final isDebtFree = initialTotalDebt > 0 ? (remainingDebtBalance <= 0) : true;
+    final progress = initialTotalDebt > 0 
+        ? ((initialTotalDebt - remainingDebtBalance) / initialTotalDebt).clamp(0.0, 1.0)
+        : 1.0;
+
+    return FreedomTimeMachineSnapshot(
+      monthOffset: monthOffset,
+      simulatedDate: DateTime.now().add(Duration(days: monthOffset * 30)),
+      remainingDebtBalance: remainingDebtBalance,
+      unlockedMonthlyCashflow: unlockedMonthlyCashflow,
+      progressPercentage: progress,
+      slainDebts: slainDebts,
+      remainingDebts: remainingDebts,
+      isDebtFree: isDebtFree,
+    );
+  }
+}
+
+class FreedomTimeMachineSnapshot {
+  final int monthOffset;
+  final DateTime simulatedDate;
+  final double remainingDebtBalance;
+  final double unlockedMonthlyCashflow;
+  final double progressPercentage;
+  final List<Obligation> slainDebts;
+  final List<Obligation> remainingDebts;
+  final bool isDebtFree;
+
+  const FreedomTimeMachineSnapshot({
+    required this.monthOffset,
+    required this.simulatedDate,
+    required this.remainingDebtBalance,
+    required this.unlockedMonthlyCashflow,
+    required this.progressPercentage,
+    required this.slainDebts,
+    required this.remainingDebts,
+    required this.isDebtFree,
+  });
 }
 
 class PaydayBlitzPlan {

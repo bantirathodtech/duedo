@@ -115,15 +115,31 @@ class DailyRingsNotifier extends StateNotifier<DailyRingsState> {
               lastActiveDate: now,
             );
           } else {
-            // Streak broken (gap of >1 day)
-            state = loaded.copyWith(
-              cleanDayCompleted: false,
-              snowflakeCompleted: false,
-              checkInCompleted: true,
-              ringsClosedToday: false,
-              currentStreak: 1,
-              lastActiveDate: now,
-            );
+            // Check if Streak Armor can rescue the streak!
+            final shields = prefs.getInt('duedo_streak_shields_banked') ?? 1;
+            if (shields > 0) {
+              final newShields = (shields - 1).clamp(0, 2);
+              await prefs.setInt('duedo_streak_shields_banked', newShields);
+              await prefs.setBool('duedo_streak_armor_deployed', true);
+              // Streak remains protected by the shield!
+              state = loaded.copyWith(
+                cleanDayCompleted: false,
+                snowflakeCompleted: false,
+                checkInCompleted: true,
+                ringsClosedToday: false,
+                lastActiveDate: now,
+              );
+            } else {
+              // Streak broken (gap of >1 day and no shields banked)
+              state = loaded.copyWith(
+                cleanDayCompleted: false,
+                snowflakeCompleted: false,
+                checkInCompleted: true,
+                ringsClosedToday: false,
+                currentStreak: 1,
+                lastActiveDate: now,
+              );
+            }
           }
         } else {
           state = loaded.copyWith(lastActiveDate: now, checkInCompleted: true);
@@ -220,5 +236,45 @@ class DailyRingsNotifier extends StateNotifier<DailyRingsState> {
       streak: state.currentStreak,
       ringsClosed: state.ringsClosedToday,
     );
+  }
+
+  /// Direct background execution from lock-screen notification action
+  static Future<void> markCleanDayFromNotification() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_prefKey);
+    DailyRingsState currentState = const DailyRingsState();
+    if (jsonStr != null) {
+      try {
+        currentState = DailyRingsState.fromJson(jsonDecode(jsonStr));
+      } catch (_) {}
+    }
+
+    if (!currentState.cleanDayCompleted) {
+      final newTotalClean = currentState.totalCleanDays + 1;
+      int streak = currentState.currentStreak;
+      int longest = currentState.longestStreak;
+      final allClosed = currentState.snowflakeCompleted && currentState.checkInCompleted;
+      if (allClosed && !currentState.ringsClosedToday) {
+        streak += 1;
+        if (streak > longest) longest = streak;
+      }
+
+      final updatedState = currentState.copyWith(
+        cleanDayCompleted: true,
+        totalCleanDays: newTotalClean,
+        currentStreak: streak,
+        longestStreak: longest,
+        ringsClosedToday: allClosed,
+        lastActiveDate: DateTime.now(),
+      );
+
+      await prefs.setString(_prefKey, jsonEncode(updatedState.toJson()));
+      await GlanceWidgetService.syncGlanceData(
+        safeToSpend: prefs.getDouble('duedo_glance_safe_to_spend') ?? 1250.0,
+        cleanDay: true,
+        streak: streak,
+        ringsClosed: allClosed,
+      );
+    }
   }
 }

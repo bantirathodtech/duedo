@@ -26,6 +26,11 @@ import '../widgets/safe_to_spend_dial_card.dart';
 import '../widgets/payday_blitz_modal.dart';
 import '../../services/freedom_league_service.dart';
 import 'freedom_league_screen.dart';
+import '../../services/streak_armor_service.dart';
+import '../../services/slain_debt_trophy_service.dart';
+import '../widgets/relapse_rescue_modal.dart';
+import 'hall_of_slain_debts_screen.dart';
+import 'freedom_time_machine_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -347,6 +352,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildPaydayBlitzPill(viewModel, state, isDark),
                 const SizedBox(width: 8),
                 _buildLeagueBadge(isDark),
+                const SizedBox(width: 8),
+                _buildStreakArmorPill(isDark),
+                const SizedBox(width: 8),
+                _buildHallOfTrophiesBadge(isDark),
+                const SizedBox(width: 8),
+                _buildTimeMachineBadge(isDark),
               ],
             ),
           ),
@@ -1984,6 +1995,126 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFFD946EF),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStreakArmorPill(bool isDark) {
+    final armor = ref.watch(streakArmorProvider);
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        RelapseRescueModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: armor.isArmorDeployed
+              ? const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.2 : 0.1)
+              : const Color(0xFF3B82F6).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: armor.isArmorDeployed
+                ? const Color(0xFFF59E0B).withValues(alpha: 0.6)
+                : const Color(0xFF3B82F6).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🛡️', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              armor.isArmorDeployed ? 'RESCUE QUEST' : '${armor.shieldsBanked} SHIELD',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: armor.isArmorDeployed ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHallOfTrophiesBadge(bool isDark) {
+    final trophies = ref.watch(slainDebtTrophyProvider);
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HallOfSlainDebtsScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🏆', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              '${trophies.length} SLAIN',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFF59E0B),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeMachineBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FreedomTimeMachineScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF10B981).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('⏳', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'TIME MACHINE',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF10B981),
                 letterSpacing: 0.6,
               ),
             ),

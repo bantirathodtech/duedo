@@ -207,4 +207,21 @@ class FreedomLeagueNotifier extends StateNotifier<FreedomLeagueState> {
     simulatedPeers.sort((a, b) => b.points.compareTo(a.points));
     return simulatedPeers;
   }
+
+  /// Direct background award from lock-screen notification action
+  static Future<void> awardPointsFromNotification(int pointsToAdd) async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentPoints = prefs.getInt(_keyPoints) ?? 1850;
+    final newPoints = currentPoints + pointsToAdd;
+    await prefs.setInt(_keyPoints, newPoints);
+
+    LeagueTier newTier = LeagueTier.gold;
+    for (final t in LeagueTier.values.reversed) {
+      if (newPoints >= t.minPoints) {
+        newTier = t;
+        break;
+      }
+    }
+    await prefs.setInt(_keyTier, newTier.index);
+  }
 }

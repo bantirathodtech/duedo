@@ -201,12 +201,13 @@ class _AdGateScreenState extends State<AdGateScreen> {
                             ],
                           ),
                           child: Center(
-                            child: ClipOval(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
                               child: Image.asset(
                                 'assets/brand/primary_mark.png',
-                                width: 110,
-                                height: 110,
-                                fit: BoxFit.cover,
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.contain,
                                 errorBuilder: (c, e, s) => const Icon(Icons.shield_moon_rounded, color: AppTheme.primary, size: 80),
                               ),
                             ),

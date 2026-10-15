@@ -211,11 +211,14 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: Image.asset(
-                    'assets/brand/primary_mark.png',
-                    fit: BoxFit.contain,
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      'assets/brand/primary_mark.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),

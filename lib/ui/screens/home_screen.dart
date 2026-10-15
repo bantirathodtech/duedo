@@ -300,7 +300,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             _buildSuccessOverlay(),
         ],
       ),
-      floatingActionButton: _buildFAB(context),
     );
   }
 
@@ -2730,48 +2729,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     }
     final end = start.add(Duration(days: obligation.gracePeriodDays));
     return '${DateFormat('MMM dd').format(start)} - ${DateFormat('dd').format(end)}';
-  }
-
-  Widget _buildFAB(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 80.0),
-      child: _EliteInteraction(
-        onTap: () {
-          HapticService.selection();
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddObligationScreen()));
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primary.withValues(alpha: 0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'ADD NEW',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: 0.8,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildSuccessOverlay() {

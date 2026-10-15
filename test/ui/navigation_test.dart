@@ -131,31 +131,40 @@ void main() {
 
       while(tester.takeException() != null) {}
       
-      final addNewFinder = find.text('ADD NEW', skipOffstage: false);
-      if (addNewFinder.evaluate().isNotEmpty) {
-        await tester.tap(addNewFinder);
+      final strikeFinder = find.text('Strike', skipOffstage: false);
+      if (strikeFinder.evaluate().isNotEmpty) {
+        await tester.tap(strikeFinder.first);
         for (int i = 0; i < 20; i++) {
           await tester.pump(const Duration(milliseconds: 100));
         }
         while(tester.takeException() != null) {}
-        expect(find.byType(AddObligationScreen, skipOffstage: false), findsOneWidget);
 
-        // Go back
-        final backButton = find.byType(BackButton);
-        if (backButton.evaluate().isNotEmpty) {
-          await tester.tap(backButton);
-        } else {
-          final backIcon = find.byIcon(Icons.arrow_back_ios_new_rounded);
-          if (backIcon.evaluate().isNotEmpty) {
-            await tester.tap(backIcon.last);
+        final addDebtFinder = find.text('Add Debt / EMI', skipOffstage: false);
+        if (addDebtFinder.evaluate().isNotEmpty) {
+          await tester.tap(addDebtFinder.first);
+          for (int i = 0; i < 20; i++) {
+            await tester.pump(const Duration(milliseconds: 100));
           }
+          while(tester.takeException() != null) {}
+          expect(find.byType(AddObligationScreen, skipOffstage: false), findsOneWidget);
+
+          // Go back
+          final backButton = find.byType(BackButton);
+          if (backButton.evaluate().isNotEmpty) {
+            await tester.tap(backButton);
+          } else {
+            final backIcon = find.byIcon(Icons.arrow_back_ios_new_rounded);
+            if (backIcon.evaluate().isNotEmpty) {
+              await tester.tap(backIcon.last);
+            }
+          }
+          
+          for (int i = 0; i < 20; i++) {
+            await tester.pump(const Duration(milliseconds: 100));
+          }
+          while(tester.takeException() != null) {}
+          expect(find.byType(HomeScreen, skipOffstage: false), findsOneWidget);
         }
-        
-        for (int i = 0; i < 20; i++) {
-          await tester.pump(const Duration(milliseconds: 100));
-        }
-        while(tester.takeException() != null) {}
-        expect(find.byType(HomeScreen, skipOffstage: false), findsOneWidget);
       }
     });
   });

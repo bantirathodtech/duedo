@@ -4,11 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
-import 'insights_screen.dart';
 import 'calendar_screen.dart';
-import 'profile_screen.dart';
+import 'insights_screen.dart';
+import 'playbook_screen.dart';
 import '../../services/haptic_service.dart';
 import '../widgets/sovereign_command_deck.dart';
+import '../widgets/quick_strike_modal.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -23,9 +24,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const InsightsScreen(),
     const CalendarScreen(),
-    const ProfileScreen(),
+    const InsightsScreen(),
+    const PlaybookScreen(),
   ];
 
   void _onPageChanged(int index) {
@@ -36,7 +37,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     HapticService.selection();
     _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutQuint,
     );
   }
@@ -102,13 +103,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _DockItem(icon: Icons.dashboard_rounded, label: 'Home', isSelected: _currentIndex == 0, onTap: () => _onItemTapped(0), isDark: isDark),
-          const SizedBox(height: 32),
-          _DockItem(icon: Icons.insights_rounded, label: 'Analysis', isSelected: _currentIndex == 1, onTap: () => _onItemTapped(1), isDark: isDark),
-          const SizedBox(height: 32),
-          _DockItem(icon: Icons.calendar_month_rounded, label: 'Schedule', isSelected: _currentIndex == 2, onTap: () => _onItemTapped(2), isDark: isDark),
-          const SizedBox(height: 32),
-          _DockItem(icon: Icons.person_rounded, label: 'Profile', isSelected: _currentIndex == 3, onTap: () => _onItemTapped(3), isDark: isDark),
+          _DockItem(icon: Icons.grid_view_rounded, label: 'Overview', isSelected: _currentIndex == 0, onTap: () => _onItemTapped(0), isDark: isDark),
+          const SizedBox(height: 28),
+          _DockItem(icon: Icons.calendar_month_rounded, label: 'Schedule', isSelected: _currentIndex == 1, onTap: () => _onItemTapped(1), isDark: isDark),
+          const SizedBox(height: 28),
+          _CenterStrikeDockItem(onTap: () => QuickStrikeModal.show(context, isDark: isDark), isDark: isDark),
+          const SizedBox(height: 28),
+          _DockItem(icon: Icons.auto_graph_rounded, label: 'Intelligence', isSelected: _currentIndex == 2, onTap: () => _onItemTapped(2), isDark: isDark),
+          const SizedBox(height: 28),
+          _DockItem(icon: Icons.menu_book_rounded, label: 'Playbook', isSelected: _currentIndex == 3, onTap: () => _onItemTapped(3), isDark: isDark),
         ],
       ),
     );
@@ -140,6 +143,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Slot 0: Overview
           Expanded(
             child: _DockItem(
               icon: Icons.grid_view_rounded,
@@ -149,31 +153,102 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               isDark: isDark,
             ),
           ),
+
+          // Slot 1: Schedule
           Expanded(
             child: _DockItem(
-              icon: Icons.auto_graph_rounded,
-              label: 'Intelligence',
+              icon: Icons.calendar_month_rounded,
+              label: 'Schedule',
               isSelected: _currentIndex == 1,
               onTap: () => _onItemTapped(1),
               isDark: isDark,
             ),
           ),
+
+          // Center Slot (Hero): Fast Action Center
+          Expanded(
+            child: _CenterStrikeDockItem(
+              onTap: () => QuickStrikeModal.show(context, isDark: isDark),
+              isDark: isDark,
+            ),
+          ),
+
+          // Slot 2: Intelligence
           Expanded(
             child: _DockItem(
-              icon: Icons.calendar_today_rounded,
-              label: 'Schedule',
+              icon: Icons.auto_graph_rounded,
+              label: 'Intelligence',
               isSelected: _currentIndex == 2,
               onTap: () => _onItemTapped(2),
               isDark: isDark,
             ),
           ),
+
+          // Slot 3: Playbook
           Expanded(
             child: _DockItem(
-              icon: Icons.account_circle_outlined,
-              label: 'Profile',
+              icon: Icons.menu_book_rounded,
+              label: 'Playbook',
               isSelected: _currentIndex == 3,
               onTap: () => _onItemTapped(3),
               isDark: isDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CenterStrikeDockItem extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const _CenterStrikeDockItem({required this.onTap, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncingWidget(
+      onTap: onTap,
+      scaleFactor: 0.90,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF00D09C), Color(0xFF0284C7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00D09C).withValues(alpha: 0.45),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.bolt_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Strike',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF00D09C),
+              letterSpacing: 0.2,
             ),
           ),
         ],

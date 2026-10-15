@@ -11,7 +11,7 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../services/database.dart';
 import '../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
-
+import 'settings_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -88,14 +88,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Configuration', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.primary)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (Navigator.canPop(context))
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                            onPressed: () {
+                              HapticService.selection();
+                              Navigator.pop(context);
+                            },
+                          )
+                        else
+                          const SizedBox.shrink(),
+                        IconButton(
+                          icon: const Icon(Icons.tune_rounded, size: 22),
+                          tooltip: 'Advanced Settings',
+                          onPressed: () {
+                            HapticService.selection();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
+                    Text('Profile & Baseline', style: GoogleFonts.outfit(fontSize: 30, fontWeight: FontWeight.w900, color: AppTheme.primary)),
+                    const SizedBox(height: 6),
                     Text(
-                      'Powering the Action Engine with accurate baseline context.',
+                      'Configure baseline income, currency, theme and personal financial preferences.',
                       style: GoogleFonts.inter(color: Colors.grey, fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 32),

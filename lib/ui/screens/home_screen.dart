@@ -14,7 +14,7 @@ import '../../services/haptic_service.dart';
 import '../widgets/snowball_curve_chart.dart';
 import 'milestones_screen.dart';
 import 'add_obligation_screen.dart';
-import 'settings_screen.dart';
+import 'profile_screen.dart';
 import '../../services/ads/interstitial_ad_manager.dart';
 import '../../services/logger_service.dart';
 import '../../services/notification_service.dart';
@@ -431,28 +431,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
         ),
         const SizedBox(width: 8),
 
-        // Settings Shortcut with Spring Physics & Frosted Styling
+        // Profile & Settings Avatar with Spring Physics
         BouncingWidget(
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           },
           child: Container(
-            padding: const EdgeInsets.all(9),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF141724) : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
-                width: 0.5,
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                    : [const Color(0xFFF1F5F9), Colors.white],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.4 : 0.25),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.15 : 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Icon(
-              Icons.tune_rounded,
-              size: 18,
-              color: isDark ? Colors.white70 : const Color(0xFF475569),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 20,
+              color: Color(0xFF818CF8),
             ),
           ),
         ),

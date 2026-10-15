@@ -35,6 +35,11 @@ import '../widgets/document_scanner_modal.dart';
 import '../widgets/vampire_slasher_modal.dart';
 import '../widgets/windfall_fortress_modal.dart';
 import '../widgets/voice_slay_modal.dart';
+import '../widgets/leech_audit_modal.dart';
+import '../widgets/syndicate_hub_modal.dart';
+import '../widgets/crisis_defibrillator_modal.dart';
+import '../widgets/wealth_flywheel_modal.dart';
+import '../../services/black_swan_crisis_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -188,6 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                               const SizedBox(height: 18),
                               _buildImpulseVaultSection(viewModel, state, currencyFormat, isDark),
                               const SizedBox(height: 18),
+                              _buildCrisisBanner(isDark),
                               _buildAlertCenter(viewModel),
                               if (_selectedTab == 0 && _getFilteredObligations(viewModel).isNotEmpty) ...[
                                 const SizedBox(height: 8),
@@ -368,6 +374,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildVampireBadge(isDark),
                 const SizedBox(width: 8),
                 _buildWindfallBadge(isDark),
+                const SizedBox(width: 8),
+                _buildLeechHunterBadge(isDark),
+                const SizedBox(width: 8),
+                _buildSyndicateBadge(isDark),
+                const SizedBox(width: 8),
+                _buildCrisisBadge(isDark),
+                const SizedBox(width: 8),
+                _buildWealthBadge(isDark),
               ],
             ),
           ),
@@ -2261,6 +2275,207 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 letterSpacing: 0.6,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeechHunterBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        LeechAuditModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔍', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'LEECH HUNTER',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFD97706),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSyndicateBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        SyndicateHubModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B5CF6).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🛡️', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'SYNDICATE',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF8B5CF6),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCrisisBadge(bool isDark) {
+    final crisis = ref.watch(blackSwanCrisisProvider);
+    final isActive = crisis.isCrisisActive;
+
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        CrisisDefibrillatorModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: (isActive ? const Color(0xFFEF4444) : const Color(0xFF06B6D4))
+              .withValues(alpha: isDark ? 0.20 : 0.10),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: (isActive ? const Color(0xFFEF4444) : const Color(0xFF06B6D4))
+                .withValues(alpha: 0.45),
+            width: isActive ? 1.0 : 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(isActive ? '🚨' : '⚡', style: const TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              isActive ? 'CRISIS ACTIVE' : 'CRISIS SHIELD',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: isActive ? const Color(0xFFEF4444) : const Color(0xFF06B6D4),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWealthBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        WealthFlywheelModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF10B981).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🚀', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'WEALTH FLYWHEEL',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF10B981),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCrisisBanner(bool isDark) {
+    final crisis = ref.watch(blackSwanCrisisProvider);
+    if (!crisis.isCrisisActive) return const SizedBox();
+
+    return GestureDetector(
+      onTap: () => CrisisDefibrillatorModal.show(context, isDark: isDark),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF3B0B10), const Color(0xFF220609)]
+                : [const Color(0xFFFEE2E2), const Color(0xFFFECACA)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.6)),
+        ),
+        child: Row(
+          children: [
+            const Text('🚨', style: TextStyle(fontSize: 22)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CRISIS DEFIBRILLATOR DEPLOYED',
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFEF4444),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    '${crisis.runwayDaysRemaining} Days of Survival Runway Protected. Snowflakes paused with zero streak penalty.',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFEF4444)),
           ],
         ),
       ),

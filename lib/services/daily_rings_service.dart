@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'haptic_service.dart';
 import 'glance_widget_service.dart';
+import 'quick_tile_service.dart';
 
 final dailyRingsServiceProvider = StateNotifierProvider<DailyRingsNotifier, DailyRingsState>((ref) {
   return DailyRingsNotifier();
@@ -235,6 +236,11 @@ class DailyRingsNotifier extends StateNotifier<DailyRingsState> {
       cleanDay: state.cleanDayCompleted,
       streak: state.currentStreak,
       ringsClosed: state.ringsClosedToday,
+    );
+    await QuickTileService.syncQuickTile(
+      safeToSpend: prefs.getDouble('duedo_glance_safe_to_spend') ?? 1250.0,
+      streakDays: state.currentStreak,
+      currency: '₹',
     );
   }
 

@@ -31,6 +31,10 @@ import '../../services/slain_debt_trophy_service.dart';
 import '../widgets/relapse_rescue_modal.dart';
 import 'hall_of_slain_debts_screen.dart';
 import 'freedom_time_machine_screen.dart';
+import '../widgets/document_scanner_modal.dart';
+import '../widgets/vampire_slasher_modal.dart';
+import '../widgets/windfall_fortress_modal.dart';
+import '../widgets/voice_slay_modal.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -358,7 +362,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _buildHallOfTrophiesBadge(isDark),
                 const SizedBox(width: 8),
                 _buildTimeMachineBadge(isDark),
+                const SizedBox(width: 8),
+                _buildScannerBadge(isDark),
+                const SizedBox(width: 8),
+                _buildVampireBadge(isDark),
+                const SizedBox(width: 8),
+                _buildWindfallBadge(isDark),
               ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // Voice Slay Action
+        GestureDetector(
+          onTap: () {
+            HapticService.selection();
+            VoiceSlayModal.show(context, isDark: isDark);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.2 : 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                width: 0.5,
+              ),
+            ),
+            child: const Icon(
+              Icons.mic_rounded,
+              size: 18,
+              color: Color(0xFF818CF8),
             ),
           ),
         ),
@@ -2115,6 +2150,114 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFF10B981),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScannerBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        DocumentScannerModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('📄', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'SCAN DOC',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF6366F1),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVampireBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        VampireSlasherModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE11D48).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFE11D48).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🧛', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'VAMPIRES',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFE11D48),
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWindfallBadge(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        HapticService.selection();
+        WindfallFortressModal.show(context, isDark: isDark);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAB308).withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFEAB308).withValues(alpha: 0.35),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('💰', style: TextStyle(fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              'WINDFALL',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFCA8A04),
                 letterSpacing: 0.6,
               ),
             ),

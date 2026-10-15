@@ -112,12 +112,16 @@ class DynamicContextBanner extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'Nocturnal Risk Window Active',
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        Flexible(
+                          child: Text(
+                            'Nocturnal Risk Window Active',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 6),

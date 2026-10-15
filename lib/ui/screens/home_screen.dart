@@ -746,13 +746,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               children: [
                 Row(
                   children: [
-                    Text(
-                      'INTEREST VAMPIRE BLEED',
-                      style: GoogleFonts.inter(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                        color: const Color(0xFFEF4444),
+                    Flexible(
+                      child: Text(
+                        'INTEREST VAMPIRE BLEED',
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.8,
+                          color: const Color(0xFFEF4444),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -1203,21 +1207,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.speed_rounded, color: AppTheme.primary, size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'FREEDOM ACCELERATOR',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white70 : const Color(0xFF334155),
-                          letterSpacing: 1.0,
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.speed_rounded, color: AppTheme.primary, size: 16),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'FREEDOM ACCELERATOR',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white70 : const Color(0xFF334155),
+                              letterSpacing: 1.0,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

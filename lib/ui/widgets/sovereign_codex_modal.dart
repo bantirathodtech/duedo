@@ -289,14 +289,19 @@ class SovereignCodexModal extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'System Readiness: All 9 Pillars Active',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black87,
+                          Expanded(
+                            child: Text(
+                              'System Readiness: All 9 Pillars Active',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             '100% UNLOCKED',
                             style: GoogleFonts.inter(

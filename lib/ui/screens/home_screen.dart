@@ -48,6 +48,7 @@ import '../widgets/informal_iou_modal.dart';
 import '../widgets/quantum_simulator_modal.dart';
 import '../widgets/midnight_brake_modal.dart';
 import '../widgets/junior_heritage_modal.dart';
+import '../widgets/sovereign_command_deck.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -196,6 +197,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                               _buildDailyFreedomRings(viewModel, state, isDark),
                               const SizedBox(height: 18),
                               _buildSafeToSpendSection(viewModel, currencyFormat),
+                              const SizedBox(height: 18),
+                              SovereignCommandDeck(isDark: isDark),
                               const SizedBox(height: 18),
                               _buildUpNextSpotlight(viewModel, state, currencyFormat, isDark),
                               const SizedBox(height: 18),
@@ -367,11 +370,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 const SizedBox(width: 8),
                 _buildStreakBadge(state.settings?.paymentStreak ?? 0, isDark),
                 const SizedBox(width: 8),
-                _buildPaydayBlitzPill(viewModel, state, isDark),
-                const SizedBox(width: 8),
                 _buildLeagueBadge(isDark),
                 const SizedBox(width: 8),
                 _buildStreakArmorPill(isDark),
+                const SizedBox(width: 8),
+                _buildPaydayBlitzPill(viewModel, state, isDark),
                 const SizedBox(width: 8),
                 _buildHallOfTrophiesBadge(isDark),
                 const SizedBox(width: 8),

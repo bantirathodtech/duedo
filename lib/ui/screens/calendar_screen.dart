@@ -5,6 +5,7 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../models/app_enums.dart';
 import '../../services/haptic_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/freedom_horizon_timeline.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -50,10 +51,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         children: [
           AppTheme.glassBackground(context),
           SafeArea(
-            child: Column(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              physics: const BouncingScrollPhysics(),
               children: [
+                // 1. Digital Visual Instrument: Freedom Horizon Timeline
+                FreedomHorizonTimeline(
+                  obligations: state.obligations,
+                  currencyFormat: currencyFormat,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 16),
+
+                // 2. Interactive Calendar Matrix
                 Container(
-                  margin: const EdgeInsets.all(24),
                   padding: const EdgeInsets.all(16),
                   decoration: AppTheme.glassDecoration(context, opacity: 0.08, blur: 20),
                   child: TableCalendar(
@@ -112,7 +123,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       titleCentered: true,
                       titleTextStyle: GoogleFonts.outfit(
                         fontWeight: FontWeight.w900, 
-                        fontSize: 18,
+                        fontSize: 18, 
                         letterSpacing: -0.5,
                       ),
                       leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppTheme.primary),
@@ -120,10 +131,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: _buildEventList(_selectedDay!, viewModel, currencyFormat),
-                ),
+                const SizedBox(height: 20),
+
+                // 3. Selected Day Schedule Section
+                _buildEventList(_selectedDay ?? _focusedDay, viewModel, currencyFormat),
               ],
             ),
           ),
@@ -137,35 +148,70 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     if (events.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_available_rounded, size: 64, color: AppTheme.primary.withValues(alpha: 0.2)),
-            const SizedBox(height: 16),
-            const Text('Clear Schedule', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-            Text(DateFormat('MMMM dd, yyyy').format(date), style: TextStyle(color: Colors.grey.withValues(alpha: 0.5), fontSize: 12)),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.event_available_rounded, size: 56, color: AppTheme.primary.withValues(alpha: 0.2)),
+              const SizedBox(height: 12),
+              const Text('Clear Schedule', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(DateFormat('MMMM dd, yyyy').format(date), style: TextStyle(color: Colors.grey.withValues(alpha: 0.5), fontSize: 12)),
+            ],
+          ),
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final obligation = events[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'SCHEDULED FOR ${DateFormat('MMM dd').format(date).toUpperCase()}',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${events.length} DUE',
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.primary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...events.map((obligation) => Container(
+          margin: const EdgeInsets.only(bottom: 12),
           decoration: AppTheme.glassDecoration(context),
           child: ListTile(
-            contentPadding: const EdgeInsets.all(20),
+            contentPadding: const EdgeInsets.all(18),
             leading: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.payment_rounded, color: AppTheme.primary, size: 28),
+              child: const Icon(Icons.payment_rounded, color: AppTheme.primary, size: 24),
             ),
             title: Text(
               obligation.title, 
@@ -188,7 +234,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   format.format(obligation.amount),
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.w900, 
-                    fontSize: 18, 
+                    fontSize: 17, 
                     color: AppTheme.primary,
                   ),
                 ),
@@ -204,8 +250,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ],
             ),
           ),
-        );
-      },
+        )),
+      ],
     );
   }
 }

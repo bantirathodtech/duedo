@@ -108,9 +108,9 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Check if event is displayed in list (since current day is selected by default)
-      expect(find.text('Monthly Rent'), findsOneWidget);
-      expect(find.text('FIXED'), findsOneWidget);
+      // Check if event is displayed in list and timeline
+      expect(find.text('Monthly Rent'), findsAtLeastNWidgets(1));
+      expect(find.text('FIXED'), findsAtLeastNWidgets(1));
     });
   });
 }

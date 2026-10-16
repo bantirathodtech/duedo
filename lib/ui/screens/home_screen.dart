@@ -17,7 +17,6 @@ import 'add_obligation_screen.dart';
 import 'profile_screen.dart';
 import '../../services/ads/interstitial_ad_manager.dart';
 import '../../services/logger_service.dart';
-import '../../services/notification_service.dart';
 import '../../services/daily_rings_service.dart';
 import '../../services/persona_voice_service.dart';
 import '../widgets/daily_freedom_rings_widget.dart';
@@ -31,6 +30,9 @@ import '../widgets/relapse_rescue_modal.dart';
 import '../widgets/crisis_defibrillator_modal.dart';
 import '../../services/black_swan_crisis_service.dart';
 import '../widgets/sovereign_command_deck.dart';
+import '../widgets/cashflow_sankey_river.dart';
+import '../widgets/debt_velocity_radar.dart';
+import '../widgets/vital_signs_ecg_wave.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -541,7 +543,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 _FreedomCountdownRing(data: freedomData),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
+
+            // Live Cardiovascular Vital Signs Wave
+            VitalSignsEcgWave(
+              healthScore: viewModel.healthScore,
+              hasOverdue: viewModel.urgentItemsCount > 0,
+              dti: viewModel.pressureScore,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 14),
 
             // Bottom Sub-Metrics Strip (EMI Load, Income, Pressure)
             Container(
@@ -631,11 +642,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   Widget _buildSafeToSpendSection(HomeViewModel viewModel, NumberFormat currencyFormat) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final metrics = viewModel.safeToSpendMetrics;
+    final state = ref.watch(homeViewModelProvider);
+    final monthlyIncome = (state.settings?.monthlyIncome ?? 0).toDouble();
+
+    double emiSum = 0;
+    double recurringSum = 0;
+    for (final ob in state.obligations) {
+      if (!ob.isActive || ob.status == ObligationStatus.paid) continue;
+      if (ob.type == ObligationType.emi || ob.type == ObligationType.oneTime) {
+        emiSum += ob.amount;
+      } else if (ob.type == ObligationType.recurring) {
+        recurringSum += ob.amount;
+      }
+    }
+    final safeMonthly = (monthlyIncome - emiSum - recurringSum).clamp(0.0, double.infinity);
+
     return _StaggeredEntry(
       delay: 85,
-      child: SafeToSpendDialCard(
-        metrics: viewModel.safeToSpendMetrics,
-        format: currencyFormat,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CashflowSankeyRiver(
+            monthlyIncome: monthlyIncome,
+            committedEMIs: emiSum,
+            committedRecurring: recurringSum,
+            safeToSpendMonthly: safeMonthly,
+            currencyFormat: currencyFormat,
+            isDark: isDark,
+          ),
+          const SizedBox(height: 14),
+          SafeToSpendDialCard(
+            metrics: metrics,
+            format: currencyFormat,
+          ),
+        ],
       ),
     );
   }
@@ -1119,10 +1161,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     bool isDark,
   ) {
     final acceleratedData = viewModel.getFreedomDataWithAcceleration(_extraAccelerator);
-    final baselineDays = viewModel.freedomData.daysLeft;
-    final acceleratedDays = acceleratedData.daysLeft;
-    final savedDays = (baselineDays - acceleratedDays).clamp(0, 9999);
-    final savedMonths = (savedDays / 30).round();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1132,213 +1170,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           monthlyWealth: acceleratedData.monthlyWealth,
           isDark: isDark,
         ),
-        const SizedBox(height: 12),
-        // Interactive Freedom Accelerator Controller
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0E1019) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
-              width: 0.8,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.speed_rounded, color: AppTheme.primary, size: 16),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'FREEDOM ACCELERATOR',
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white70 : const Color(0xFF334155),
-                              letterSpacing: 1.0,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Tooltip(
-                        message: 'Pin Live Countdown to Lock Screen',
-                        child: GestureDetector(
-                          onTap: () async {
-                            HapticService.selection();
-                            final freedomData = viewModel.freedomData;
-                            final days = freedomData.daysLeft;
-                            final activeDebts = state.obligations.where((o) => o.isActive).toList();
-                            final totalDebt = activeDebts.fold<double>(0.0, (sum, o) => sum + (o.totalBalance > 0 ? o.totalBalance : o.amount));
-                            final upNext = activeDebts.isNotEmpty ? activeDebts.first.title : null;
-                            await ref.read(notificationServiceProvider).showFreedomClockTicker(
-                              daysToDebtFreedom: days,
-                              totalDebtRemaining: totalDebt,
-                              currency: currencyFormat.currencySymbol,
-                              nextUrgentDebt: upNext,
-                            );
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Freedom Countdown Ticker active on Lock Screen! ⏳'),
-                                backgroundColor: AppTheme.primary,
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                            ),
-                            child: const Icon(Icons.push_pin_outlined, color: Colors.white70, size: 14),
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => _showSnowflakeModal(context, viewModel, state, currencyFormat, isDark),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF38BDF8).withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.ac_unit_rounded, color: Colors.white, size: 12),
-                              const SizedBox(width: 4),
-                              Text(
-                                'THROW SNOWFLAKE',
-                                style: GoogleFonts.inter(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildAcceleratorChip(0, 'Baseline', isDark),
-                  const SizedBox(width: 8),
-                  _buildAcceleratorChip(1000, '+₹1K', isDark),
-                  const SizedBox(width: 8),
-                  _buildAcceleratorChip(2500, '+₹2.5K', isDark),
-                  const SizedBox(width: 8),
-                  _buildAcceleratorChip(5000, '+₹5K', isDark),
-                ],
-              ),
-              if (_extraAccelerator > 0) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: isDark ? 0.08 : 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.primary.withValues(alpha: 0.2),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.auto_awesome_rounded, color: AppTheme.primary, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Paying +${currencyFormat.format(_extraAccelerator)}/mo frees you $savedMonths months earlier by ${DateFormat('MMM yyyy').format(acceleratedData.targetDate)}!',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF334155),
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
+        const SizedBox(height: 14),
+        DebtVelocityRadar(
+          activeDebts: state.obligations.where((o) => o.isActive && o.status != ObligationStatus.paid).toList(),
+          monthlyIncome: (state.settings?.monthlyIncome ?? 0).toDouble(),
+          currentExtraPayment: _extraAccelerator,
+          currencyFormat: currencyFormat,
+          isDark: isDark,
+          onExtraPaymentChanged: (val) {
+            setState(() => _extraAccelerator = val);
+          },
+          onThrowSnowflake: () {
+            _showSnowflakeModal(
+              context, 
+              viewModel, 
+              state, 
+              currencyFormat, 
+              isDark, 
+              initialAmount: _extraAccelerator > 0 ? _extraAccelerator : 500.0,
+            );
+          },
         ),
       ],
-    );
-  }
-
-  Widget _buildAcceleratorChip(double extra, String label, bool isDark) {
-    final isSelected = _extraAccelerator == extra;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticService.selection();
-          setState(() => _extraAccelerator = extra);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(
-            color: isSelected 
-                ? AppTheme.primary.withValues(alpha: isDark ? 0.20 : 0.12)
-                : (isDark ? const Color(0xFF161925) : const Color(0xFFF1F5F9)),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? AppTheme.primary : (isDark ? AppTheme.borderDark : AppTheme.borderLight),
-              width: isSelected ? 1.0 : 0.5,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                color: isSelected 
-                    ? AppTheme.primary 
-                    : (isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 

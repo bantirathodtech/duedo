@@ -461,6 +461,25 @@ class HomeViewModel extends StateNotifier<HomeState> {
     }
     return projection;
   }
+
+  /// Seeds realistic test fleet across all instruments
+  Future<void> seedDemoFleet() async {
+    state = state.copyWith(isLoading: true);
+    await _repository.seedDemoData(force: true);
+    state = state.copyWith(isLoading: false);
+  }
+
+  /// Purges all obligations and payments
+  Future<void> clearAllData() async {
+    state = state.copyWith(isLoading: true);
+    await _repository.clearAllData();
+    state = state.copyWith(isLoading: false);
+  }
+
+  /// Adds a new debt or commitment
+  Future<int> addObligation(ObligationsCompanion obligation) async {
+    return await _repository.createObligation(obligation);
+  }
 }
 
 final homeViewModelProvider = StateNotifierProvider<HomeViewModel, HomeState>((ref) {

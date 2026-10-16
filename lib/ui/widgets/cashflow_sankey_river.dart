@@ -15,6 +15,8 @@ class CashflowSankeyRiver extends StatefulWidget {
   final double safeToSpendMonthly;
   final NumberFormat currencyFormat;
   final bool isDark;
+  final int? selectedBranch;
+  final ValueChanged<int?>? onBranchSelected;
 
   const CashflowSankeyRiver({
     super.key,
@@ -24,6 +26,8 @@ class CashflowSankeyRiver extends StatefulWidget {
     required this.safeToSpendMonthly,
     required this.currencyFormat,
     required this.isDark,
+    this.selectedBranch,
+    this.onBranchSelected,
   });
 
   @override
@@ -37,10 +41,21 @@ class _CashflowSankeyRiverState extends State<CashflowSankeyRiver> with SingleTi
   @override
   void initState() {
     super.initState();
+    _selectedBranch = widget.selectedBranch;
     _flowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     )..repeat();
+  }
+
+  @override
+  void didUpdateWidget(covariant CashflowSankeyRiver oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedBranch != oldWidget.selectedBranch) {
+      setState(() {
+        _selectedBranch = widget.selectedBranch;
+      });
+    }
   }
 
   @override
@@ -224,9 +239,11 @@ class _CashflowSankeyRiverState extends State<CashflowSankeyRiver> with SingleTi
     return GestureDetector(
       onTap: () {
         HapticService.selection();
+        final newSelection = _selectedBranch == index ? null : index;
         setState(() {
-          _selectedBranch = _selectedBranch == index ? null : index;
+          _selectedBranch = newSelection;
         });
+        widget.onBranchSelected?.call(newSelection);
       },
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 180),

@@ -57,8 +57,10 @@ class HapticService {
   // Legacy compatibility wrappers
   static void selection() => subtleClick();
   static void light() => subtleClick();
+  static void lightImpact() => subtleClick();
   static void medium() => Vibration.vibrate(duration: 50);
   static void heavy() => savageThud();
+  static void heavyImpact() => savageThud();
   static void success() => victoryPop();
   static void error() => warningWave();
   static void warning() => subtleClick(); // Compatibility

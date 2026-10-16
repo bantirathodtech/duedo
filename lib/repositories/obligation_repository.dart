@@ -42,6 +42,11 @@ class ObligationRepository {
     await _databaseService.seedProductionDemoData(force: force);
   }
 
+  /// Purges all local debt and payment records
+  Future<void> clearAllData() async {
+    await _databaseService.clearAllData();
+  }
+
   /// Bulk sync all local records to the cloud (used after Google Sign-In)
   Future<void> syncAllLocalToCloud() async {
     if (!_supabaseService.canSync) return;

@@ -1390,6 +1390,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
           ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Purge All Records?'),
+                  content: const Text('This will delete all obligations and payments from your local database.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true), 
+                      child: const Text('Purge', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                HapticService.heavyImpact();
+                final repo = ref.read(obligationRepositoryProvider);
+                await repo.clearAllData();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('All financial records cleared.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+            label: Text(
+              'Purge All Financial Records',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.redAccent),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.redAccent, width: 1.0),
+              minimumSize: const Size(double.infinity, 46),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
         ],
       ),
     );

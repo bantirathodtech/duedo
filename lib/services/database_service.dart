@@ -238,6 +238,12 @@ class DatabaseService {
       isActive: const Value(true),
     ));
   }
+
+  /// Purges all obligations and payments
+  Future<void> clearAllData() async {
+    await _db.delete(_db.payments).go();
+    await _db.delete(_db.obligations).go();
+  }
 }
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {

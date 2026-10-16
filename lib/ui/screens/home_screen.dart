@@ -33,6 +33,8 @@ import '../widgets/sovereign_command_deck.dart';
 import '../widgets/cashflow_sankey_river.dart';
 import '../widgets/debt_velocity_radar.dart';
 import '../widgets/vital_signs_ecg_wave.dart';
+import '../widgets/quick_ignition_modal.dart';
+import '../../services/vault_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -45,6 +47,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   bool _showSuccessAnimation = false;
   int _selectedTab = 0; // 0: Debts & EMIs, 1: Monthly Essentials
   double _extraAccelerator = 0.0;
+  int? _sankeyFilterBranch; // null = all, 0 = EMIs, 1 = Essentials, 2 = Safe
+  bool _isPrivacyMaskActive = false;
+  bool _isVaultLocked = false;
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
   late InterstitialAdManager _interstitialAdManager;
@@ -52,10 +57,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
+    _checkVaultLock();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadBannerAd();
     });
     _interstitialAdManager = InterstitialAdManager()..loadAd();
+  }
+
+  Future<void> _checkVaultLock() async {
+    final vaultService = ref.read(vaultServiceProvider);
+    final isEnabled = await vaultService.isVaultEnabled();
+    if (isEnabled && mounted) {
+      setState(() => _isVaultLocked = true);
+      _unlockVault();
+    }
+  }
+
+  Future<void> _unlockVault() async {
+    final vaultService = ref.read(vaultServiceProvider);
+    final authenticated = await vaultService.authenticate(
+      reason: 'Authenticate to access your Sovereign Financial Vault',
+    );
+    if (authenticated && mounted) {
+      setState(() => _isVaultLocked = false);
+    }
   }
 
   Future<void> _loadBannerAd() async {
@@ -138,6 +163,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     final state = ref.watch(homeViewModelProvider);
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Biometric Security Gate
+    if (_isVaultLocked) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            AppTheme.glassBackground(context),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4), width: 1.5),
+                      ),
+                      child: const Icon(Icons.fingerprint_rounded, size: 56, color: AppTheme.primary),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Sovereign Vault Locked',
+                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Biometric authentication is required to access your financial radar.',
+                      style: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    ElevatedButton.icon(
+                      onPressed: _unlockVault,
+                      icon: const Icon(Icons.lock_open_rounded, size: 18),
+                      label: const Text('Unlock with Biometrics'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: const Color(0xFF092C22),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     // Trigger success animation when a new milestone is unlocked
     ref.listen(homeViewModelProvider.select((s) => s.hasNewlyUnlockedMilestone), (previous, next) {
@@ -363,6 +441,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
         ),
         const SizedBox(width: 8),
 
+        // Privacy Mask Toggle
+        GestureDetector(
+          onTap: () {
+            HapticService.lightImpact();
+            setState(() => _isPrivacyMaskActive = !_isPrivacyMaskActive);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: _isPrivacyMaskActive 
+                  ? const Color(0xFFF43F5E).withValues(alpha: 0.15) 
+                  : (isDark ? const Color(0xFF141722) : Colors.white),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: _isPrivacyMaskActive 
+                    ? const Color(0xFFF43F5E).withValues(alpha: 0.5) 
+                    : (isDark ? AppTheme.borderDark : AppTheme.borderLight),
+                width: 0.8,
+              ),
+            ),
+            child: Icon(
+              _isPrivacyMaskActive ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+              size: 15,
+              color: _isPrivacyMaskActive ? const Color(0xFFF43F5E) : (isDark ? Colors.white70 : Colors.black54),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
         // Profile & Settings Avatar with Spring Physics
         BouncingWidget(
           onTap: () {
@@ -499,17 +606,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
-                        child: _AnimatedRollNumber(
-                          value: grandTotal,
-                          format: currencyFormat,
-                          style: GoogleFonts.outfit(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.2,
-                            height: 1.1,
-                          ),
-                        ),
+                        child: _isPrivacyMaskActive
+                            ? Text(
+                                '₹ ••••••',
+                                style: GoogleFonts.outfit(
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2.0,
+                                  height: 1.1,
+                                ),
+                              )
+                            : _AnimatedRollNumber(
+                                value: grandTotal,
+                                format: currencyFormat,
+                                style: GoogleFonts.outfit(
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.2,
+                                  height: 1.1,
+                                ),
+                              ),
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -671,6 +789,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             safeToSpendMonthly: safeMonthly,
             currencyFormat: currencyFormat,
             isDark: isDark,
+            selectedBranch: _sankeyFilterBranch,
+            onBranchSelected: (branch) {
+              setState(() => _sankeyFilterBranch = branch);
+            },
           ),
           const SizedBox(height: 14),
           SafeToSpendDialCard(
@@ -2049,6 +2171,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
 
   List<Obligation> _getFilteredObligations(HomeViewModel viewModel) {
     final sorted = viewModel.sortedObligations;
+    if (_sankeyFilterBranch != null) {
+      if (_sankeyFilterBranch == 0) {
+        return sorted.where((o) => o.type == ObligationType.emi || o.type == ObligationType.oneTime).toList();
+      } else if (_sankeyFilterBranch == 1) {
+        return sorted.where((o) => o.type == ObligationType.recurring).toList();
+      } else {
+        return sorted.where((o) => o.status == ObligationStatus.paid || !o.isActive).toList();
+      }
+    }
     if (_selectedTab == 0) {
       return sorted.where((o) => o.type != ObligationType.recurring).toList();
     } else {
@@ -2062,6 +2193,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
 
     return Column(
       children: [
+        if (_sankeyFilterBranch != null) ...[
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: (_sankeyFilterBranch == 0
+                      ? const Color(0xFFF43F5E)
+                      : (_sankeyFilterBranch == 1 ? const Color(0xFFF59E0B) : const Color(0xFF00D09C)))
+                  .withValues(alpha: isDark ? 0.2 : 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: (_sankeyFilterBranch == 0
+                        ? const Color(0xFFF43F5E)
+                        : (_sankeyFilterBranch == 1 ? const Color(0xFFF59E0B) : const Color(0xFF00D09C)))
+                    .withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.filter_alt_rounded,
+                      size: 14,
+                      color: _sankeyFilterBranch == 0
+                          ? const Color(0xFFF43F5E)
+                          : (_sankeyFilterBranch == 1 ? const Color(0xFFF59E0B) : const Color(0xFF00D09C)),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'FILTERED: ${_sankeyFilterBranch == 0 ? "DEBT EMIS" : (_sankeyFilterBranch == 1 ? "ESSENTIALS & BILLS" : "FREE CAPITAL")}',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: _sankeyFilterBranch == 0
+                            ? const Color(0xFFF43F5E)
+                            : (_sankeyFilterBranch == 1 ? const Color(0xFFF59E0B) : const Color(0xFF00D09C)),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () {
+                    HapticService.selection();
+                    setState(() => _sankeyFilterBranch = null);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white12 : Colors.black12,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Clear ✕',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -2368,6 +2568,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               height: 1.4,
             ),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  HapticService.selection();
+                  QuickIgnitionModal.show(
+                    context,
+                    viewModel: ref.read(homeViewModelProvider.notifier),
+                    currencyFormat: NumberFormat.simpleCurrency(name: '₹', decimalDigits: 0),
+                    isDark: isDark,
+                  );
+                },
+                icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+                label: const Text('30-Sec Ignition'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: const Color(0xFF092C22),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+              ),
+              const SizedBox(width: 10),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  HapticService.heavyImpact();
+                  await ref.read(homeViewModelProvider.notifier).seedDemoFleet();
+                },
+                icon: const Icon(Icons.flash_on_rounded, size: 16, color: Color(0xFF818CF8)),
+                label: const Text('Load Demo Fleet'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF818CF8),
+                  side: const BorderSide(color: Color(0xFF818CF8), width: 1.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
           ),
         ],
       ),

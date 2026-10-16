@@ -1,46 +1,146 @@
-# Android signing
-android/key.properties
+# ==============================================================================
+# DUEDO COMPREHENSIVE .GITIGNORE
+# Hardened for Flutter, Android, iOS, macOS, Security, Secrets & Local Data
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Security, Credentials, Keystores & Environment Secrets
+# ------------------------------------------------------------------------------
 *.jks
+*.keystore
+*.key
+*.pem
+*.p12
+*.p8
+*.cer
+*.crt
+*.secret
+*.mobileprovision
+key.properties
+android/key.properties
+android/app/key.properties
+.env
+.env.*
+*.env
+*.credentials
+.github_token_backup
+
+# ------------------------------------------------------------------------------
+# 2. Local Databases & AI / Dev Graph Stores
+# ------------------------------------------------------------------------------
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+.code-review-graph/
+.tempmediaStorage/
+
+# ------------------------------------------------------------------------------
+# 3. Compiled Binaries & Release Packages
+# ------------------------------------------------------------------------------
+*.apk
+*.aab
+*.ap_
+*.ipa
+*.app
+*.xarchive
+*.dylib
+*.so
+*.dll
+*.exe
+
+# ------------------------------------------------------------------------------
+# 4. Flutter & Dart Build Outputs & Caches
+# ------------------------------------------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+**/doc/api/
+app.*.symbols
+app.*.map.json
+migrate_working_dir/
+
+# ------------------------------------------------------------------------------
+# 5. Android Platform Specifics
+# ------------------------------------------------------------------------------
+android/.gradle/
+android/local.properties
+android/app/debug
+android/app/profile
+android/app/release
+**/android/captures/
+**/android/.cxx/
+GeneratedPluginRegistrant.java
+
+# ------------------------------------------------------------------------------
+# 6. iOS / macOS Platform Specifics
+# ------------------------------------------------------------------------------
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+**/macos/.symlinks/
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+**/xcuserdata/
+*.xcuserstate
+
+# ------------------------------------------------------------------------------
+# 7. IDE & Editor Artifacts
+# ------------------------------------------------------------------------------
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+.atom/
+*.sublime-project
+*.sublime-workspace
+
+# ------------------------------------------------------------------------------
+# 8. Operating System & Temporary Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
 *.log
 *.pyc
 *.swp
-.DS_Store
-.atom/
+*.swo
+*~
+*.bak
+*.tmp
+*.temp
 .build/
 .buildlog/
 .history
 .svn/
 .swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release

@@ -6,6 +6,7 @@ import '../../services/database.dart';
 import '../../models/app_enums.dart';
 import '../theme/app_theme.dart';
 import '../screens/add_obligation_screen.dart';
+import 'sovereign_vault_modal.dart';
 
 /// Interactive "Freedom Horizon" Domino & Fortress Target Timeline
 /// Transforms static date lists into an empowering chronological domino progression,
@@ -33,29 +34,117 @@ class FreedomHorizonTimeline extends StatelessWidget {
 
     if (activeDebts.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F1424) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF00D09C).withValues(alpha: 0.3)),
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF1E1908), const Color(0xFF0F1424)]
+                : [const Color(0xFFFFFBEB), const Color(0xFFF0FDF4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color(0xFFFFD700).withValues(alpha: isDark ? 0.45 : 0.6),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFD700).withValues(alpha: isDark ? 0.12 : 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('🏆', style: TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Absolute Freedom Horizon Reached',
-                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
-                  Text(
-                    'All debt fortresses have been completely conquered.',
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                  child: const Icon(Icons.emoji_events_rounded, color: Colors.black, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'ABSOLUTE SOVEREIGN FREEDOM',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.8,
+                              color: const Color(0xFFFFD700),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text('✨', style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Zero Active Debts • 100% Cashflow Freedom',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Every single debt fortress has been systematically conquered. You are free from interest leakage, bank servitude, and predatory compounding.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                height: 1.45,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  HapticService.dopamineCascade();
+                  SovereignVaultModal.show(context, isDark: isDark);
+                },
+                icon: const Icon(Icons.verified_user_rounded, color: Colors.black, size: 18),
+                label: Text(
+                  'View SHA-256 Freedom Certificate',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: Colors.black,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFD700),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 4,
+                  shadowColor: const Color(0xFFFFD700).withValues(alpha: 0.35),
+                ),
               ),
             ),
           ],

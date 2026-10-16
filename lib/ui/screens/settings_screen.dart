@@ -48,6 +48,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   bool _vaultEnabled = false;
+  bool _isSyncingCloud = false;
   void _loadVaultStatus() async {
     final enabled = await ref.read(vaultServiceProvider).isVaultEnabled();
     if (mounted) setState(() => _vaultEnabled = enabled);
@@ -859,59 +860,202 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = supabaseService.currentUser;
 
     return _buildSectionCard(
-      title: '🌐 Cloud Sync & Account',
-      description: 'Sync your data across all devices',
+      title: '🌐 Sovereign Cloud & Sync',
+      description: 'Continuous encrypted cloud backup & multi-device recovery',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isAuth) ...[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                child: const Icon(Icons.person, color: AppTheme.primary),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00D09C).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF00D09C).withValues(alpha: 0.25)),
               ),
-              title: Text(user?.email ?? 'Member', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: const Text('Account linked & syncing', style: TextStyle(color: AppTheme.success, fontSize: 12)),
-              trailing: IconButton(
-                icon: const Icon(Icons.logout_rounded, color: Colors.grey),
-                onPressed: () async {
-                  HapticService.warning();
-                  await supabaseService.signOut();
-                  // Trigger UI refresh
-                  setState(() {});
-                },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: const Color(0xFF00D09C).withValues(alpha: 0.2),
+                    child: const Icon(Icons.cloud_done_rounded, color: Color(0xFF00D09C), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.email ?? 'Authenticated Member',
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF00D09C),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Encrypted PostgreSQL Vault Active',
+                              style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF00D09C), fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Sign Out',
+                    icon: const Icon(Icons.logout_rounded, color: Colors.grey, size: 20),
+                    onPressed: () async {
+                      HapticService.warning();
+                      await supabaseService.signOut();
+                      setState(() {});
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.devices_rounded, size: 14, color: Colors.white70),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Cross-Device Ready',
+                            style: GoogleFonts.inter(fontSize: 11, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.security_rounded, size: 14, color: Colors.white70),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'E2E Local Drift + Cloud',
+                            style: GoogleFonts.inter(fontSize: 11, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton.icon(
+                icon: _isSyncingCloud
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      )
+                    : const Icon(Icons.cloud_sync_rounded, size: 18, color: Colors.black),
+                label: Text(
+                  _isSyncingCloud ? 'Syncing Vault...' : 'Sync Local Database to Cloud Now',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00D09C),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                ),
+                onPressed: _isSyncingCloud
+                    ? null
+                    : () async {
+                        setState(() => _isSyncingCloud = true);
+                        HapticService.selection();
+                        try {
+                          final repo = ref.read(obligationRepositoryProvider);
+                          await repo.syncAllLocalToCloud();
+                          HapticService.success();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('☁️ Cloud Vault synchronized! All records backed up.'),
+                                backgroundColor: AppTheme.success,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          HapticService.warning();
+                          if (mounted) _showError('Sync failed: $e');
+                        } finally {
+                          if (mounted) setState(() => _isSyncingCloud = false);
+                        }
+                      },
               ),
             ),
           ] else ...[
-            const Text(
-              'Currently in Guest Mode (Offline). Sign in to back up your debts and access them anywhere.',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+            Text(
+              'Currently in Guest Mode (Offline). Your financial records are secured strictly on this device via encrypted Drift SQLite. Sign in with Google to enable automatic cross-device sync & seamless cloud recovery.',
+              style: GoogleFonts.inter(color: Colors.grey, fontSize: 12, height: 1.45),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 48,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.login_rounded, size: 18),
-                label: const Text('Sync with Google Account'),
+                label: Text(
+                  'Sign In with Google to Enable Cloud Sync',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.25)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () async {
                   try {
                     HapticService.selection();
                     await supabaseService.signInWithGoogle();
-                    
+
                     if (mounted) {
-                      // Trigger migration
+                      // Trigger migration from local Drift SQLite to Supabase
                       final repo = ref.read(obligationRepositoryProvider);
                       await repo.syncAllLocalToCloud();
-                      
+
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cloud sync activated! Data migrated.')),
+                        const SnackBar(
+                          content: Text('☁️ Cloud sync activated! Local records migrated seamlessly.'),
+                          backgroundColor: AppTheme.success,
+                          behavior: SnackBarBehavior.floating,
+                        ),
                       );
                       setState(() {});
                     }

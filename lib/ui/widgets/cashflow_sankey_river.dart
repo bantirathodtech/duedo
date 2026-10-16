@@ -122,11 +122,14 @@ class _CashflowSankeyRiverState extends State<CashflowSankeyRiver> with SingleTi
                         ),
                       ),
                       Text(
-                        'Fluid Allocation & Capital Bleed',
+                        widget.committedEMIs == 0
+                            ? '🏆 0% LEAK • ABSOLUTE FREEDOM SURGE'
+                            : 'Fluid Allocation & Capital Bleed',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           color: const Color(0xFF00D09C),
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: widget.committedEMIs == 0 ? 0.4 : 0.0,
                         ),
                       ),
                     ],
@@ -189,11 +192,11 @@ class _CashflowSankeyRiverState extends State<CashflowSankeyRiver> with SingleTi
               Expanded(
                 child: _buildBranchPill(
                   index: 0,
-                  label: 'Debt EMIs',
+                  label: widget.committedEMIs == 0 ? '0% Debt Leak' : 'Debt EMIs',
                   amount: widget.committedEMIs,
                   percent: (emiPercent * 100).toInt(),
-                  color: const Color(0xFFF43F5E),
-                  icon: Icons.shield_outlined,
+                  color: widget.committedEMIs == 0 ? const Color(0xFF00D09C) : const Color(0xFFF43F5E),
+                  icon: widget.committedEMIs == 0 ? Icons.check_circle_rounded : Icons.shield_outlined,
                 ),
               ),
               const SizedBox(width: 8),

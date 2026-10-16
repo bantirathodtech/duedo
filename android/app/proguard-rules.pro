@@ -30,3 +30,7 @@
 -keepattributes EnclosingMethod
 -dontwarn javax.annotation.**
 -dontwarn org.conscrypt.**
+
+# Play Core / Deferred Components
+-dontwarn com.google.android.play.core.**
+

@@ -7,7 +7,30 @@ import '../widgets/vampire_slasher_modal.dart';
 import '../widgets/leech_audit_modal.dart';
 import '../widgets/banker_combat_modal.dart';
 import '../widgets/quantum_simulator_modal.dart';
-import '../widgets/sovereign_codex_modal.dart';
+
+class PhaseFeatureInfo {
+  final int phaseNumber;
+  final String title;
+  final String subtitle;
+  final String icon;
+  final Color accentColor;
+  final String humanBenefit;
+  final List<String> bulletPoints;
+  final VoidCallback onLaunch;
+  final String buttonLabel;
+
+  const PhaseFeatureInfo({
+    required this.phaseNumber,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accentColor,
+    required this.humanBenefit,
+    required this.bulletPoints,
+    required this.onLaunch,
+    this.buttonLabel = 'Experience Feature',
+  });
+}
 
 /// Full-Screen Sovereign Playbook Tab showcasing all 9 Pillars and Specialized Financial Centers.
 class PlaybookScreen extends StatelessWidget {

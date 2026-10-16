@@ -28,7 +28,6 @@ import '../../services/freedom_league_service.dart';
 import 'freedom_league_screen.dart';
 import '../../services/streak_armor_service.dart';
 import '../widgets/relapse_rescue_modal.dart';
-import '../widgets/voice_slay_modal.dart';
 import '../widgets/crisis_defibrillator_modal.dart';
 import '../../services/black_swan_crisis_service.dart';
 import '../widgets/sovereign_command_deck.dart';
@@ -180,8 +179,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                               _buildDailyFreedomRings(viewModel, state, isDark),
                               const SizedBox(height: 18),
                               _buildSafeToSpendSection(viewModel, currencyFormat),
-                              const SizedBox(height: 18),
-                              SovereignCommandDeck(isDark: isDark),
                               const SizedBox(height: 18),
                               _buildUpNextSpotlight(viewModel, state, currencyFormat, isDark),
                               const SizedBox(height: 18),
@@ -359,37 +356,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                 const SizedBox(width: 8),
                 _buildPaydayBlitzPill(viewModel, state, isDark),
               ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-
-        // Voice Slay Action with Pulsing Gradient & Spring Physics
-        BouncingWidget(
-          onTap: () {
-            VoiceSlayModal.show(context, isDark: isDark);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.mic_rounded,
-              size: 18,
-              color: Colors.white,
             ),
           ),
         ),
